@@ -1,6 +1,6 @@
 # PEAK — Official Site
 
-Scroll-driven site for **PEAK** — Dutch-born, Barcelona-based high-energy drum & bass DJ, co-founder of [DnBabes](https://www.instagram.com/dnbabes_bcn/) (@dnbabes_bcn).
+Scroll-driven site for **PEAK** — Dutch-born, Barcelona-based high-energy drum & bass DJ, founder of [DnBabes](https://www.instagram.com/dnbabes_bcn/) (@dnbabes_bcn).
 
 **Concept: "Rotation."** A photoreal jog wheel is the site's through-line — it turns as you scroll, you can grab and scratch it, and it becomes the player when her mix comes in. A living club-light system shifts hue per section and breathes at 174 BPM.
 
@@ -23,7 +23,7 @@ Single self-contained page (`index.html`) — no build step, no dependencies. Ex
 
 ## Before public launch
 
-- Confirm with PEAK: press-photo usage rights, "founder vs co-founder" wording.
+- Confirm with PEAK: press-photo usage rights.
 - Swap `bookings@` placeholder contact if needed; add her preferred booking email.
 - Optional: her IG reels as muted hero/finale loops (she can export her own).
 

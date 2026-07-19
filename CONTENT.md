@@ -5,8 +5,7 @@ Every fact below is sourced. Confidence: ✅ = fetched & verified · ⚠️ = se
 ## Identity
 - ✅ **PEAK** — Dutch DJ from **Harderwijk, NL** (~40k inhabitants), moved to Barcelona after graduation. High-energy **dancefloor DnB with neurofunk / 4x4 / deep / jump-up turns**. (SoundCloud bio + Sala Apolo bio + drumandbassproper.com)
 - ✅ DJ career began **January 2024**. (SoundCloud bio; Sala Apolo says "began 2024")
-- ✅ **Co-founder** of **DnBabes** ("Drum & Babes Barcelona", IG **@dnbabes_bcn**, tagline "Fierce, Free and for Everyone") — mission: inclusive lineups elevating women in the Spanish DnB scene. (Sala Apolo + drumandbassproper.com)
-  - ⚠️ NOTE: our site currently says "founder of DnB Babes BCN" — **wrong name, and 'co-founder' per Apolo**. Confirm wording with PEAK.
+- ✅ **Founder** of **DnBabes** (client-confirmed sole founder; Sala Apolo bio says "co-founder" — client corrected this) ("Drum & Babes Barcelona", IG **@dnbabes_bcn**, tagline "Fierce, Free and for Everyone") — mission: inclusive lineups elevating women in the Spanish DnB scene. (Sala Apolo + drumandbassproper.com)
 - ✅ IG: **@peak.dnb** (displays "PEAK - PK")
 
 ## Music (real!)
