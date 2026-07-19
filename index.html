@@ -7,7 +7,7 @@
 <meta name="description" content="PEAK — Dutch-born, Barcelona-based drum &amp; bass DJ. Founder of DnBabes. Liquicity Barcelona, Sala Apolo, The Void Utrecht. Press play, spin the platter, book the set.">
 <meta name="theme-color" content="#0a0b13">
 <meta property="og:title" content="PEAK — High Energy Drum &amp; Bass">
-<meta property="og:description" content="Dutch pressure, Barcelona heat — locked at 174. Listen to her first public mix and book the set.">
+<meta property="og:description" content="Dutch pressure, Barcelona heat — 172–180 BPM. Listen to her first public mix and book the set.">
 <meta property="og:image" content="assets/peak-press-web.webp">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230a0b13'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23f00060' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%23f2f4f7'/%3E%3C/svg%3E">
@@ -206,9 +206,19 @@ body.hasplay .tring{opacity:.9}
 }
 /* invisible grab pad mirroring the platter, above content — the scratcher's hit area */
 #grabwrap{position:fixed;top:50%;right:0;z-index:55;width:min(82vmin,880px);aspect-ratio:1;transform:translate(37%,-50%);pointer-events:none}
-#grabpad{position:absolute;inset:8.5%;border-radius:50%;pointer-events:auto;touch-action:pan-y}
+#grabpad{position:absolute;inset:2%;border-radius:50%;pointer-events:auto;touch-action:pan-y;cursor:grab}
+#grabpad:active{cursor:grabbing}
 @media (max-width:820px){ #grabwrap{display:none} }
 @media (prefers-reduced-motion:reduce){ #grabwrap{display:none} }
+/* scratch hint — nudges the interaction the platter offers */
+#scratchhint{
+  position:fixed;right:26px;top:calc(50% + 120px);z-index:56;text-align:right;max-width:130px;
+  color:var(--dim);opacity:0;transform:translateY(8px);pointer-events:none;
+  transition:opacity .55s var(--ease),transform .55s var(--ease);
+}
+#scratchhint.show{opacity:.8;transform:none}
+#scratchhint b{color:rgb(var(--la));font-weight:700}
+@media (max-width:980px){ #scratchhint{display:none} }
 .jogimg img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .hub{
   left:50%;top:50%;transform:translate(-50%,-50%);
@@ -398,10 +408,21 @@ section{padding:19vh 0 15vh}
 
 /* ---------- timeline ---------- */
 .tline{margin-top:44px;border-top:1px solid var(--line)}
-.step{display:flex;gap:22px;padding:24px 6px;border-bottom:1px solid var(--line);align-items:baseline}
-.step .deg{
-  font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;letter-spacing:.18em;
-  color:var(--mag);width:64px;flex:none;
+.step{display:flex;gap:22px;padding:24px 6px;border-bottom:1px solid var(--line);align-items:flex-start}
+/* the climb: bars rise step by step to the peak (a PEAK has a summit, not degrees) */
+.step .mark{width:64px;flex:none;display:flex;align-items:flex-end;height:40px;position:relative}
+.step .mark i{display:block;width:11px;border-radius:3px 3px 0 0;background:linear-gradient(rgba(240,0,96,.95),rgba(240,0,96,.18))}
+.tline .step:nth-child(1) .mark i{height:20%}
+.tline .step:nth-child(2) .mark i{height:33%}
+.tline .step:nth-child(3) .mark i{height:47%}
+.tline .step:nth-child(4) .mark i{height:61%}
+.tline .step:nth-child(5) .mark i{height:75%}
+.tline .step:nth-child(6) .mark i{height:88%}
+.tline .step:nth-child(7) .mark i{height:100%}
+.step .mark.peak i{background:linear-gradient(var(--mag),rgba(240,0,96,.4));box-shadow:0 0 calc(8px + var(--pulse)*8px) rgba(240,0,96,calc(.35 + var(--pulse)*.3))}
+.step .mark.peak::before{
+  content:"";position:absolute;left:0;top:-9px;
+  border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:9px solid var(--mag);
 }
 .step h3{font-weight:800;text-transform:uppercase;letter-spacing:-.02em;font-size:clamp(16px,1.9vw,22px)}
 .step p{color:var(--mut);font-size:14px;margin-top:4px;max-width:44ch}
@@ -659,7 +680,7 @@ body.pre .orbit{opacity:.22}
 </header>
 
 <div class="hud mono" aria-hidden="true">
-  <div class="row"><span class="k">BPM</span><span class="v" id="hudbpm">174.0</span><span class="k">CUE</span><span class="v acc" id="hudsec">HERO</span></div>
+  <div class="row"><span class="k">BPM</span><span class="v" id="hudbpm">172&#8211;180</span><span class="k">CUE</span><span class="v acc" id="hudsec">HERO</span></div>
 </div>
 
 <div class="progressbar" aria-hidden="true"><i></i></div>
@@ -668,7 +689,7 @@ body.pre .orbit{opacity:.22}
 <div class="jogwrap" id="jogwrap" aria-hidden="true">
   <svg class="orbit" viewBox="0 0 500 500">
     <defs><path id="orbpath" d="M250,26 a224,224 0 1,1 -0.01,0" fill="none"></path></defs>
-    <text><textPath href="#orbpath">HIGH ENERGY DRUM AND BASS &#183; 174 BPM &#183; BARCELONA &#183; HIGH ENERGY DRUM AND BASS &#183; 174 BPM &#183; BARCELONA &#183; </textPath></text>
+    <text><textPath href="#orbpath">HIGH ENERGY DRUM AND BASS &#183; 172&#8211;180 BPM &#183; BARCELONA &#183; HIGH ENERGY DRUM AND BASS &#183; 172&#8211;180 BPM &#183; BARCELONA &#183; </textPath></text>
   </svg>
   <div class="cring" id="cring"></div>
   <div class="ticks"></div>
@@ -687,21 +708,21 @@ body.pre .orbit{opacity:.22}
     <div class="ghost" aria-hidden="true">PEAK</div>
     <div class="col">
       <div class="reveal in">
-        <p class="lbl">Barcelona &#183; NL &#183; <b>174 BPM</b></p>
+        <p class="lbl">Barcelona &#183; NL &#183; <b>172&#8211;180 BPM</b></p>
       </div>
       <h1 class="display reveal in d1">PEAK<span class="dot">.</span></h1>
-      <p class="hero-sub reveal in d2">High energy drum &amp; bass. Dutch pressure, Barcelona heat &mdash; locked at 174.</p>
+      <p class="hero-sub reveal in d2">High energy drum &amp; bass. Dutch pressure, Barcelona heat &mdash; locked in from 172 to 180.</p>
       <div class="hero-ctas reveal in d3">
         <button class="hcta solid" id="heroplay" type="button"><b>&#9654;&#xFE0E;</b>&nbsp;Play her first mix</button>
         <a class="hcta line" href="#booking">Book the set</a>
       </div>
       <div class="hero-press reveal in d3">
         <p class="pressq">&ldquo;The boss lady of DnBabes&rdquo;<span>&mdash; Drum &amp; Bass Proper</span></p>
-        <p class="lbl venues">Liquicity Barcelona &#183; The Void Utrecht &#183; Sala Apolo</p>
+        <p class="lbl venues">Razzmatazz &#183; Sala Apolo &#183; Tramunfest &#183; The Void Utrecht</p>
       </div>
       <div class="scrollcue reveal in d3">
         <span class="wheelico"></span>
-        <span class="lbl">Scroll to spin the platter &mdash; or grab it</span>
+        <span class="lbl">Scroll to spin the platter</span>
       </div>
     </div>
   </section>
@@ -716,13 +737,9 @@ body.pre .orbit{opacity:.22}
         </svg>
         <h2 class="display">From NL<br>to BCN</h2>
       </div>
-      <p class="lede reveal d1">From Harderwijk to Barcelona. PEAK took the Dutch drum &amp; bass school south and built a scene around it &mdash; co-founding <em>DnBabes</em>, the collective putting women behind the decks of the city&#8217;s heaviest nights.</p>
-      <blockquote class="pull reveal d2">&#8220;Every set is a revolution &mdash; cut, weighted, and rolled at <span class="beat">174</span>.&#8221;</blockquote>
-      <p class="story-p reveal d3">First sets in January 2024. Since then: a homecoming at The Void festival in Utrecht, an Apologia &times; DnBabes night at Sala Apolo, and the Room 2 closing slot at Liquicity Barcelona &mdash; same night as Fox Stevenson, Maduk and Emily Makis. The circle keeps widening.</p>
-      <figure class="press reveal d3">
-        <img src="assets/peak-press-web.webp" alt="PEAK behind the decks in magenta club light" loading="lazy">
-        <figcaption class="cap mono"><span>PEAK &#183; BARCELONA</span><span>PRESS &#183; 01</span></figcaption>
-      </figure>
+      <p class="lede reveal d1">From Harderwijk to Barcelona. PEAK took the Dutch drum &amp; bass school south and built a scene around it &mdash; founding <em>DnBabes</em>, the collective putting women behind the decks of the city&#8217;s heaviest nights.</p>
+      <blockquote class="pull reveal d2">&#8220;Every set is a revolution &mdash; cut, weighted, and rolled anywhere from <span class="beat">172 to 180</span>.&#8221;</blockquote>
+      <p class="story-p reveal d3">First sets in January 2024. Then a homecoming in Harderwijk, The Void festival in Utrecht, Apologia &times; DnBabes at Sala Apolo, the closing slot at Liquicity Barcelona alongside Fox Stevenson and Maduk, and a sold-out Tramunfest in Girona. Still climbing.</p>
       <div class="about-grid reveal d3">
         <img class="portrait" src="assets/peak-portrait.jpg" alt="PEAK portrait">
         <p><span class="lbl" style="display:block;margin-bottom:8px">PEAK &#183; founder, DnBabes</span>Drum &amp; Babes Barcelona &mdash; fierce, free and for everyone. Selector, promoter, community-builder; booked for high-energy rooms that want the tempo kept honest.</p>
@@ -760,9 +777,6 @@ body.pre .orbit{opacity:.22}
         </button>
         <div class="mixembed" id="mixembed" hidden></div>
       </div>
-      <div class="pills reveal d3">
-        <a class="pill" href="https://soundcloud.com/peak_dnb" target="_blank" rel="noopener noreferrer">SoundCloud &#8599;</a>
-      </div>
     </div>
   </section>
 
@@ -772,25 +786,26 @@ body.pre .orbit{opacity:.22}
       <div class="reveal">
         <svg class="arc" viewBox="0 0 240 80" aria-hidden="true">
           <defs><path id="arc3" d="M20,74 A160,160 0 0 1 220,74" fill="none"></path></defs>
-          <text><textPath href="#arc3" startOffset="50%" text-anchor="middle"><tspan class="accfill">03</tspan> &#8212; ONE FULL TURN</textPath></text>
+          <text><textPath href="#arc3" startOffset="50%" text-anchor="middle"><tspan class="accfill">03</tspan> &#8212; THE CLIMB</textPath></text>
         </svg>
-        <h2 class="display">The Run</h2>
+        <h2 class="display">To the peak</h2>
       </div>
       <div class="tline">
-        <div class="step reveal"><span class="deg">000&deg;</span><div><h3>Jan &#8217;24 &#8212; First sets</h3><p>Barcelona. The needle drops &mdash; the career begins at 174.</p></div></div>
-        <div class="step reveal"><span class="deg">072&deg;</span><div><h3>&#8217;24 &#8212; Automata nights</h3><p>Barcelona&#8217;s Automata DNB parties &mdash; sharing bills with Subsonic and Freaks &amp; Geeks.</p></div></div>
-        <div class="step reveal"><span class="deg">144&deg;</span><div><h3>Oct &#8217;25 &#8212; The Void, Utrecht</h3><p>Indoor DnB festival, ECLIPSE stage. The NL homecoming.</p></div></div>
-        <div class="step reveal"><span class="deg">216&deg;</span><div><h3>Mar &#8217;26 &#8212; Sala Apolo</h3><p>Apologia &times; DnBabes at La Cinc &mdash; the collective on one of Barcelona&#8217;s biggest stages.</p></div></div>
-        <div class="step now reveal"><span class="deg">288&deg;</span><div><h3>May &#8217;26 &#8212; Liquicity Barcelona</h3><p>Razzmatazz, Room 2 &mdash; the 01:00&#8211;02:00 closing slot. Same night as Fox Stevenson, Maduk and Emily Makis.</p><p class="now-tag lbl"><b>&#9679;</b> The current peak</p></div></div>
+        <div class="step reveal"><span class="mark"><i></i></span><div><h3>Jan &#8217;24 &#8212; First sets</h3><p>Barcelona. The needle drops &mdash; the career begins.</p></div></div>
+        <div class="step reveal"><span class="mark"><i></i></span><div><h3>&#8217;24 &#8212; Automata nights</h3><p>Barcelona&#8217;s Automata DNB parties &mdash; earning the local circuit.</p></div></div>
+        <div class="step reveal"><span class="mark"><i></i></span><div><h3>Jan &#8217;25 &#8212; Harderwijk</h3><p>Home turf. The real homecoming, back where it all started.</p></div></div>
+        <div class="step reveal"><span class="mark"><i></i></span><div><h3>Oct &#8217;25 &#8212; The Void, Utrecht</h3><p>Indoor DnB festival, ECLIPSE stage &mdash; the second homecoming.</p></div></div>
+        <div class="step reveal"><span class="mark"><i></i></span><div><h3>Mar &#8217;26 &#8212; Sala Apolo</h3><p>Apologia &times; DnBabes in La Cinc, the intimate room &mdash; and back again that June.</p></div></div>
+        <div class="step reveal"><span class="mark"><i></i></span><div><h3>May &#8217;26 &#8212; Liquicity Barcelona</h3><p>Razzmatazz &mdash; the closing slot, same night as Fox Stevenson, Maduk and Emily Makis.</p></div></div>
+        <div class="step now reveal"><span class="mark peak"><i></i></span><div><h3>Jul &#8217;26 &#8212; Tramunfest, Girona</h3><p>A sold-out festival &mdash; the highest point yet.</p><p class="now-tag lbl"><b>&#9650;</b> The peak &#8212; so far</p></div></div>
       </div>
-      <p class="tline-note lbl reveal">Shared bills &#8212; Serum &#183; Nymfo &#183; Arcando &#183; Brain &#183; Bala &#183; Lilakk</p>
     </div>
   </section>
 
   <div class="ticker" aria-hidden="true">
     <div class="tk">
-      <span>Liquicity Barcelona &#183; Razzmatazz &mdash; The Void &#183; Utrecht &mdash; Sala Apolo &#183; La Cinc &mdash; Automata DNB &#183; Barcelona &mdash; <b>DnBabes</b> &#183; fierce, free and for everyone &mdash;&nbsp;</span>
-      <span>Liquicity Barcelona &#183; Razzmatazz &mdash; The Void &#183; Utrecht &mdash; Sala Apolo &#183; La Cinc &mdash; Automata DNB &#183; Barcelona &mdash; <b>DnBabes</b> &#183; fierce, free and for everyone &mdash;&nbsp;</span>
+      <span>Razzmatazz &#183; Barcelona &mdash; Tramunfest &#183; Girona &mdash; Sala Apolo &mdash; The Void &#183; Utrecht &mdash; Harderwijk &#183; NL &mdash; <b>DnBabes</b> &#183; fierce, free and for everyone &mdash;&nbsp;</span>
+      <span>Razzmatazz &#183; Barcelona &mdash; Tramunfest &#183; Girona &mdash; Sala Apolo &mdash; The Void &#183; Utrecht &mdash; Harderwijk &#183; NL &mdash; <b>DnBabes</b> &#183; fierce, free and for everyone &mdash;&nbsp;</span>
     </div>
   </div>
 
@@ -806,26 +821,22 @@ body.pre .orbit{opacity:.22}
       </div>
       <div class="frames">
         <figure class="frame reveal">
-          <img src="assets/peak-live-01.webp" alt="PEAK in the booth, headphones on, red club light" loading="lazy">
-          <figcaption class="cap lbl"><span>Still 01 &#8212; In the booth</span><span>Barcelona</span></figcaption>
-        </figure>
-        <figure class="frame reveal">
           <img src="assets/peak-live-02.webp" alt="PEAK's hands on the decks" loading="lazy">
-          <figcaption class="cap lbl"><span>Still 02 &#8212; Hands on</span><span>174.0</span></figcaption>
+          <figcaption class="cap lbl"><span>Still 01 &#8212; Hands on</span><span>Barcelona</span></figcaption>
         </figure>
         <figure class="frame reveal">
           <button class="vplay" id="vplay" type="button" aria-label="Play the Barcelona Showcase video">
             <img src="assets/peak-video-still.webp" alt="PEAK performing — Barcelona Showcase video" loading="lazy">
             <span class="vbadge" aria-hidden="true">&#9654;&#xFE0E;</span>
           </button>
-          <figcaption class="cap lbl"><span>Still 03 &#8212; On film</span><span>Barcelona Showcase</span></figcaption>
+          <figcaption class="cap lbl"><span>Still 02 &#8212; On film</span><span>Barcelona Showcase</span></figcaption>
         </figure>
         <figure class="frame reveal">
           <img src="assets/peak-liquicity-banner.webp" alt="Liquicity Barcelona lineup — PEAK on the bill with Fox Stevenson, Maduk and Emily Makis" loading="lazy">
-          <figcaption class="cap lbl"><span>Still 04 &#8212; The bill</span><span>Liquicity &#183; Razzmatazz</span></figcaption>
+          <figcaption class="cap lbl"><span>Still 03 &#8212; The bill</span><span>Liquicity &#183; Razzmatazz</span></figcaption>
         </figure>
       </div>
-      <p class="gal-note lbl reveal">Shot in the booth &#8212; press play on Still 03 for the full showcase.</p>
+      <p class="gal-note lbl reveal">Shot in the booth &#8212; press play on Still 02 for the full showcase. More frames coming.</p>
     </div>
   </section>
 
@@ -869,10 +880,12 @@ body.pre .orbit{opacity:.22}
         <div class="field">
           <label class="lbl" for="f-len">Set length</label>
           <select id="f-len" name="length">
+            <option>30 min</option>
+            <option>45 min</option>
             <option>60 min</option>
             <option>90 min</option>
             <option>120 min</option>
-            <option>All night</option>
+            <option>Open format</option>
           </select>
         </div>
         <div class="field">
@@ -897,9 +910,7 @@ body.pre .orbit{opacity:.22}
         <a class="cta" href="#music">Listen</a>
         <a class="cta" href="https://www.instagram.com/peak.dnb/" target="_blank" rel="noopener noreferrer">Instagram</a>
         <a class="cta" href="https://soundcloud.com/peak_dnb" target="_blank" rel="noopener noreferrer">SoundCloud</a>
-        <button class="cta" id="mgmtbtn" type="button">Management</button>
       </div>
-      <p class="mgmt-note lbl" id="mgmtnote">MGMT &#8212; bookings via the form above &#183; demo site, no direct contact wired.</p>
     </div>
   </section>
 
@@ -908,7 +919,7 @@ body.pre .orbit{opacity:.22}
 <footer>
   <span class="lbl">PEAK &#183; 2026</span>
   <span class="lbl">Everything turns &#8212; nothing bounces</span>
-  <span class="lbl">Built at <b>174 BPM</b></span>
+  <span class="lbl">Built at <b>172&#8211;180 BPM</b></span>
 </footer>
 
 <div class="cur-ring" id="curring" aria-hidden="true"></div>
@@ -917,6 +928,7 @@ body.pre .orbit{opacity:.22}
 <div id="flashfx" aria-hidden="true"></div>
 
 <div id="grabwrap" aria-hidden="true"><div id="grabpad" data-grab></div></div>
+<div id="scratchhint"><b>&#9211;</b> Grab the platter<br>to scratch it</div>
 
 <div class="npchip" id="npchip" role="status">
   <button class="npmain" id="npgo" type="button" aria-label="Now playing — go to the music section">
@@ -1041,9 +1053,15 @@ body.pre .orbit{opacity:.22}
     return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180 / Math.PI;
   }
   var grabpad = document.getElementById("grabpad");
+  var scratchhint = document.getElementById("scratchhint");
+  var hintLock = false;
+  function showHint(on){ if (scratchhint && !hintLock) scratchhint.classList.toggle("show", on); }
   if (grabpad) {
+    grabpad.addEventListener("pointerenter", function(){ showHint(true); });
+    grabpad.addEventListener("pointerleave", function(){ if (!scratching) showHint(false); });
     grabpad.addEventListener("pointerdown", function(e){
       scratching = true; lastPA = pAng(e); lastPT = performance.now(); scratchV = 0;
+      hintLock = true; if (scratchhint) scratchhint.classList.remove("show");
       try { grabpad.setPointerCapture(e.pointerId); } catch (err) {}
     });
     grabpad.addEventListener("pointermove", function(e){
@@ -1058,8 +1076,14 @@ body.pre .orbit{opacity:.22}
       if (scrAcc > 24) { scrAcc = 0; blip(880); }
     });
     ["pointerup", "pointercancel"].forEach(function(evn){
-      grabpad.addEventListener(evn, function(){ scratching = false; });
+      grabpad.addEventListener(evn, function(){ scratching = false; showHint(false); });
     });
+    // one-time discovery nudge once the site has settled
+    setTimeout(function(){
+      if (hintLock) return;
+      showHint(true);
+      setTimeout(function(){ if (!scratching) showHint(false); }, 3400);
+    }, 2600);
   }
 
   // gallery: click-to-load the Barcelona Showcase video (YouTube, privacy mode)
@@ -1090,9 +1114,7 @@ body.pre .orbit{opacity:.22}
   });
 
   /* ---------- management dummy ---------- */
-  document.getElementById("mgmtbtn").addEventListener("click", function(){
-    document.getElementById("mgmtnote").classList.add("show");
-  });
+  // (management CTA removed — no handler needed)
 
   /* ---------- section reveals + HUD cue ---------- */
   var revealEls = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
@@ -1165,7 +1187,7 @@ body.pre .orbit{opacity:.22}
     document.body.classList.remove("pre");
     flashfx.classList.add("hit");
     setTimeout(function(){ flashfx.classList.remove("hit"); }, 420);
-    if (hudbpm) hudbpm.textContent = "174.0";
+    if (hudbpm) hudbpm.textContent = "172\u2013180";
     blip(2300);
   }
   if (preEntr) {
@@ -1191,7 +1213,7 @@ body.pre .orbit{opacity:.22}
     if (!dropped) {
       var eP = clamp((now - entrT0) / 1100, 0, 1);
       entrAngle += (eP * eP * 300) * dt / 1000;   // accelerating spin-up
-      if (hudbpm) hudbpm.textContent = (174 * eP * eP).toFixed(1);
+      if (hudbpm) hudbpm.textContent = Math.round(180 * eP * eP) + "";
     }
     eL = lerp(eL, dropped ? 1 : 0.1, 0.06);       // light bloom on the drop
 
