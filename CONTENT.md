@@ -5,7 +5,7 @@ Every fact below is sourced. Confidence: ✅ = fetched & verified · ⚠️ = se
 ## Identity
 - ✅ **PEAK** — Dutch DJ from **Harderwijk, NL** (~40k inhabitants), moved to Barcelona after graduation. High-energy **dancefloor DnB with neurofunk / 4x4 / deep / jump-up turns**. (SoundCloud bio + Sala Apolo bio + drumandbassproper.com)
 - ✅ DJ career began **January 2024**. (SoundCloud bio; Sala Apolo says "began 2024")
-- ✅ **Founder** of **DnBabes** (client-confirmed sole founder; Sala Apolo bio says "co-founder" — client corrected this) ("Drum & Babes Barcelona", IG **@dnbabes_bcn**, tagline "Fierce, Free and for Everyone") — mission: inclusive lineups elevating women in the Spanish DnB scene. (Sala Apolo + drumandbassproper.com)
+- ✅ **Founder** of **DnBabes** (client-confirmed AND Sala Apolo verbatim: "Como fundadora de DnBabes" — an earlier research pass misread the Spanish as "co-founder"; the venue listing was always correct) ("Drum & Babes Barcelona", IG **@dnbabes_bcn**, tagline "Fierce, Free and for Everyone") — mission: inclusive lineups elevating women in the Spanish DnB scene. (Sala Apolo + drumandbassproper.com)
 - ✅ IG: **@peak.dnb** (displays "PEAK - PK")
 
 ## Music (real!)
@@ -29,7 +29,7 @@ Every fact below is sourced. Confidence: ✅ = fetched & verified · ⚠️ = se
 | 14 Mar 2026 | **Apologia X DnBabes @ Sala Apolo (La Cinc)** w/ Qua[R]k, She Wolf, Vichissua, Arya | ✅ sala-apolo.com |
 | 24 May 2026 | **Liquicity Barcelona @ Razzmatazz** — Room 2, 01:00–02:00 (closing slot). Room 1: Fox Stevenson, Maduk, Emily Makis, Keeno… | ✅ liquicity.com |
 
-- ✅ Shared bills with: **Serum, Nymfo, Bala, Lilakk** (Sala Apolo bio), Subsonic, Freaks & Geeks (SC bio)
+- ✅ Shared bills (Sala Apolo bio, verbatim list): internationals **Arcando, Subsonic, Freaks & Geeks, Serum, Nymfo, Brain**; nationals **Lilakk, Bala, Melic, Xtinctor, Direct Shift, Psycorp, 7thSense, Solo**
 - ❌ **Mallorca: NOT verifiable** — remove from site unless PEAK supplies evidence.
 - ❌ "BCN '22 first sets": wrong — career started 2024.
 
