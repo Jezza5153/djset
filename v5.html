@@ -6,17 +6,24 @@
 <title>PEAK — Rotation</title>
 <style>
 :root{
-  --bg:#07080b;
+  --bg:#0a0b13;
   --ink:#f2f4f7;
   --mag:#f00060;
   --cyn:#12b6e8;
   --mut:rgba(242,244,247,.52);
-  --dim:rgba(242,244,247,.28);
+  --dim:rgba(242,244,247,.42);
   --line:rgba(242,244,247,.1);
   --pulse:0;
   --vel:0;
+  --velabs:0;
   --prog:0;
   --tprog:0;
+  /* living light — section hues (r,g,b) + intensities, driven from the rAF loop */
+  --la:240,0,96;
+  --lb:122,58,224;
+  --ga:.55;
+  --gb:.28;
+  --gc:0;
   --ease:cubic-bezier(.16,1,.3,1);
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -41,6 +48,13 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 }
 .mono b{color:var(--mag);font-weight:600}
 
+/* ---------- editorial small label (warmer sibling of .mono) ---------- */
+.lbl{
+  font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--mut);
+}
+.lbl b{color:var(--mag);font-weight:700}
+
 /* ---------- display type ---------- */
 .display{
   font-weight:900;text-transform:uppercase;
@@ -60,7 +74,29 @@ h2.display{font-size:clamp(38px,6.4vw,92px)}
 }
 .vignette{
   position:fixed;inset:0;z-index:59;pointer-events:none;
-  background:radial-gradient(ellipse at 50% 42%,transparent 52%,rgba(0,0,0,.55) 100%);
+  background:radial-gradient(ellipse at 50% 42%,transparent 58%,rgba(0,0,0,.4) 100%);
+}
+
+/* ---------- living light (club atmosphere) ---------- */
+.lights{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:clip}
+.glow{position:absolute;border-radius:50%;will-change:transform,opacity}
+.glowA{
+  left:-24vmax;top:50%;width:95vmax;height:95vmax;
+  background:radial-gradient(circle,rgba(var(--la),.32) 0%,rgba(var(--la),.13) 34%,transparent 68%);
+  opacity:calc(var(--ga) * (.8 + var(--pulse)*.2 + var(--velabs)*.006));
+  transform:translateY(-50%) scale(calc(1 + var(--pulse)*.03));
+}
+.glowB{
+  right:-30vmax;top:-22vmax;width:105vmax;height:105vmax;
+  background:radial-gradient(circle,rgba(var(--lb),.28) 0%,rgba(var(--lb),.1) 36%,transparent 70%);
+  opacity:calc(var(--gb) * (.82 + var(--pulse)*.18 + var(--velabs)*.005));
+  transform:scale(calc(1 + var(--pulse)*.025));
+}
+.glowC{
+  left:50%;bottom:-46vmax;width:130vmax;height:90vmax;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 50%,rgba(var(--la),.3) 0%,rgba(var(--lb),.12) 40%,transparent 68%);
+  opacity:calc(var(--gc) * (.78 + var(--pulse)*.22));
+  transform:translateX(-50%) scale(calc(1 + var(--pulse)*.03));
 }
 
 /* ---------- header ---------- */
@@ -120,7 +156,13 @@ h2.display{font-size:clamp(38px,6.4vw,92px)}
   background:conic-gradient(from -90deg,var(--mag),var(--cyn) calc(var(--prog)*1turn),rgba(242,244,247,.05) 0);
   -webkit-mask:radial-gradient(closest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
   mask:radial-gradient(closest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
-  filter:drop-shadow(0 0 calc(3px + var(--pulse)*4px) rgba(240,0,96,calc(.25 + var(--pulse)*.2)));
+  filter:drop-shadow(0 0 calc(3px + var(--pulse)*4px) rgba(var(--la),calc(.3 + var(--pulse)*.2)));
+}
+.cring{
+  inset:.8%;
+  border:1px dashed rgba(var(--lb),.42);
+  opacity:.45;
+  will-change:transform;
 }
 .tring{
   inset:5%;
@@ -132,14 +174,27 @@ h2.display{font-size:clamp(38px,6.4vw,92px)}
 body.hasplay .tring{opacity:.9}
 .orbit{inset:-4.5%;border-radius:0;animation:orbitspin 70s linear infinite}
 .orbit text{
-  font-family:ui-monospace,"SF Mono",Menlo,monospace;
-  font-size:15.5px;letter-spacing:.42em;
-  fill:rgba(242,244,247,.4);
+  font-family:inherit;
+  font-size:15px;font-weight:600;letter-spacing:.48em;
+  fill:rgba(242,244,247,.44);
+  transition:fill .45s var(--ease);
 }
+.jogwrap.cue .orbit text{fill:rgba(var(--la),.95)}
+.jogwrap.cue .marker{opacity:1}
 @keyframes orbitspin{to{transform:rotate(360deg)}}
+.halo{
+  inset:3.5%;
+  background:radial-gradient(circle closest-side,transparent 74%,rgba(var(--la),.22) 89%,transparent 100%);
+  opacity:calc(.72 + var(--pulse)*.28 + var(--velabs)*.003);
+  will-change:opacity;
+}
+.platshadow{
+  inset:8.5%;
+  box-shadow:0 30px 120px rgba(0,0,0,.55);
+}
 .jogimg{
   inset:8.5%;overflow:hidden;
-  box-shadow:0 0 90px rgba(240,0,96,calc(.10 + var(--pulse)*.06)),0 30px 120px rgba(0,0,0,.6);
+  box-shadow:0 0 calc(70px + var(--pulse)*40px) rgba(var(--la),calc(.16 + var(--pulse)*.1));
   will-change:transform;
 }
 .jogimg img{width:100%;height:100%;object-fit:cover;border-radius:50%}
@@ -150,8 +205,9 @@ body.hasplay .tring{opacity:.9}
 .marker{
   left:50%;top:2.2%;width:2px;height:5.5%;border-radius:1px;
   transform:translateX(-50%);
-  background:linear-gradient(var(--mag),transparent);
-  opacity:.9;
+  background:linear-gradient(rgb(var(--la)),transparent);
+  opacity:.85;
+  transition:opacity .45s var(--ease);
 }
 
 /* ---------- layout ---------- */
@@ -163,8 +219,8 @@ main{position:relative;z-index:2}
 section{padding:19vh 0 15vh}
 .arc{width:200px;height:70px;display:block;margin-bottom:-6px}
 .arc text{
-  font-family:ui-monospace,"SF Mono",Menlo,monospace;
-  font-size:12.5px;letter-spacing:.34em;fill:var(--dim);text-transform:uppercase;
+  font-family:inherit;font-weight:700;
+  font-size:12px;letter-spacing:.3em;fill:var(--mut);text-transform:uppercase;
 }
 .arc .accfill{fill:var(--mag)}
 
@@ -199,42 +255,80 @@ section{padding:19vh 0 15vh}
 /* ---------- about ---------- */
 .lede{font-size:clamp(19px,2.2vw,27px);font-weight:600;line-height:1.4;letter-spacing:-.01em;margin-top:34px}
 .lede em{font-style:normal;color:var(--mag)}
-.about-grid{margin-top:44px;display:flex;gap:26px;align-items:flex-start;border-top:1px solid var(--line);padding-top:30px}
-.portrait{width:78px;height:78px;border-radius:50%;object-fit:cover;filter:grayscale(1);flex:none;border:1px solid var(--line)}
+.pull{
+  margin-top:40px;border:0;
+  font-family:Georgia,"Iowan Old Style","Times New Roman",serif;
+  font-style:italic;font-weight:400;
+  font-size:clamp(25px,3.4vw,42px);line-height:1.22;letter-spacing:-.01em;
+  color:var(--ink);max-width:22ch;
+  text-shadow:0 0 60px rgba(var(--la),.35);
+}
+.pull .beat{color:var(--mag)}
+.story-p{margin-top:34px;color:var(--mut);font-size:clamp(15px,1.6vw,18px);line-height:1.65;max-width:52ch}
+@keyframes floaty{50%{transform:translateY(-7px)}}
+.press{margin-top:46px;width:min(480px,100%)}
+.press img{
+  width:100%;aspect-ratio:3/4;object-fit:cover;
+  border:1px solid rgba(242,244,247,.13);
+  filter:saturate(.98) contrast(1.05);
+  box-shadow:0 26px 80px rgba(0,0,0,.5),0 0 110px rgba(var(--la),.22);
+  animation:floaty 9s ease-in-out infinite;
+  will-change:transform;
+}
+.about-grid{margin-top:44px;display:flex;gap:30px;align-items:center;border-top:1px solid var(--line);padding-top:32px}
+.portrait{
+  width:118px;height:118px;border-radius:50%;object-fit:cover;flex:none;
+  filter:saturate(.95) contrast(1.05);
+  border:1px solid rgba(var(--la),.28);
+  box-shadow:0 0 38px rgba(var(--la),.20),0 14px 40px rgba(0,0,0,.45);
+  animation:floaty 7s ease-in-out infinite;
+  will-change:transform;
+}
 .about-grid p{color:var(--mut);font-size:15px;max-width:46ch}
 
-/* ---------- music ---------- */
-.tracks{margin-top:40px;border-top:1px solid var(--line)}
-.trk{
-  width:100%;display:flex;align-items:baseline;gap:18px;text-align:left;
-  padding:20px 6px;border-bottom:1px solid var(--line);
-  transition:background .5s var(--ease);
+/* ---------- music: featured mix card ---------- */
+.mixcard{
+  margin-top:40px;border:1px solid var(--line);border-radius:16px;
+  background:rgba(12,13,20,.55);
+  box-shadow:0 26px 80px rgba(0,0,0,.45),0 0 90px rgba(var(--la),.16);
+  overflow:hidden;
+  transition:border-color .5s var(--ease);
 }
-.trk:hover{background:rgba(242,244,247,.03)}
-.trk .no{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;color:var(--dim);width:28px;flex:none}
-.trk .nm{font-weight:800;text-transform:uppercase;letter-spacing:-.02em;font-size:clamp(17px,2vw,23px);flex:1}
-.trk .tm{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;color:var(--mut);letter-spacing:.12em}
-.trk.cur .no{color:var(--mag)}
-.trk.cur .nm{color:var(--mag)}
-.transport{margin-top:34px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.tbtn{
-  width:52px;height:52px;border:1px solid var(--line);border-radius:50%;
-  display:grid;place-items:center;font-size:14px;color:var(--ink);
-  transition:border-color .5s var(--ease),transform .5s var(--ease);
+.mixcard:hover{border-color:rgba(240,0,96,.45)}
+.mixplay{
+  width:100%;display:flex;align-items:center;gap:24px;text-align:left;
+  padding:22px;transition:background .5s var(--ease);
 }
-.tbtn:hover{border-color:rgba(240,0,96,.65)}
-.tbtn.play{width:66px;height:66px;border-color:rgba(240,0,96,.55);box-shadow:0 0 calc(10px + var(--pulse)*10px) rgba(240,0,96,calc(.12 + var(--pulse)*.12))}
-.tclock{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;letter-spacing:.16em;color:var(--mut);margin-left:8px}
-.tclock b{color:var(--ink);font-weight:500}
+.mixplay:hover{background:rgba(242,244,247,.03)}
+.mixplay[hidden]{display:none}
+.mixart{
+  position:relative;flex:none;width:112px;height:112px;border-radius:10px;
+  overflow:hidden;border:1px solid rgba(var(--la),.3);
+}
+.mixart img{width:100%;height:100%;object-fit:cover;filter:saturate(1.02) contrast(1.04)}
+.pbadge{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:44px;height:44px;border-radius:50%;
+  display:grid;place-items:center;font-size:13px;color:var(--ink);
+  background:rgba(10,11,19,.55);border:1px solid rgba(240,0,96,.7);
+  box-shadow:0 0 calc(8px + var(--pulse)*8px) rgba(240,0,96,calc(.2 + var(--pulse)*.2));
+}
+.mixinfo{display:flex;flex-direction:column;gap:7px;min-width:0}
+.mixtitle{font-weight:800;text-transform:uppercase;letter-spacing:-.02em;font-size:clamp(17px,2vw,23px);line-height:1.15}
+.mixmeta{line-height:1.7}
+.mixcta{color:var(--mut);transition:color .5s var(--ease)}
+.mixplay:hover .mixcta{color:var(--ink)}
+.mixembed{padding:10px}
+.mixembed[hidden]{display:none}
+.mixembed iframe{display:block;width:100%;height:166px;border:0;border-radius:10px;background:rgba(10,11,19,.6)}
 .pills{margin-top:30px;display:flex;gap:12px;flex-wrap:wrap}
 .pill{
+  display:inline-block;
   border:1px solid var(--line);border-radius:999px;padding:10px 20px;
-  font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mut);
+  font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);
   transition:border-color .5s var(--ease),color .5s var(--ease);
 }
 .pill:hover{color:var(--ink);border-color:rgba(18,182,232,.6)}
-.upnext{margin-top:26px;color:var(--dim)}
-.upnext b{color:var(--cyn);font-weight:600}
 
 /* ---------- timeline ---------- */
 .tline{margin-top:44px;border-top:1px solid var(--line)}
@@ -245,16 +339,23 @@ section{padding:19vh 0 15vh}
 }
 .step h3{font-weight:800;text-transform:uppercase;letter-spacing:-.02em;font-size:clamp(16px,1.9vw,22px)}
 .step p{color:var(--mut);font-size:14px;margin-top:4px;max-width:44ch}
+.step.now h3{color:var(--mag)}
+.step .now-tag{margin-top:10px}
+.tline-note{margin-top:34px;color:var(--dim)}
 
 /* ---------- gallery ---------- */
 .frames{margin-top:44px;display:flex;flex-direction:column;gap:8vh}
 .frame{position:relative}
 .frame img{
   width:100%;aspect-ratio:16/10;object-fit:cover;
-  border:1px solid var(--line);
-  filter:saturate(.85) contrast(1.05);
+  border:1px solid rgba(242,244,247,.13);
+  filter:saturate(.98) contrast(1.05);
+  box-shadow:0 26px 80px rgba(0,0,0,.5),0 0 110px rgba(var(--lb),.25);
+  animation:floaty 9s ease-in-out infinite;
+  will-change:transform;
 }
 .frame:nth-child(even){width:86%;margin-left:auto}
+.frame:nth-child(even) img{animation-delay:-4.5s}
 .cap{margin-top:12px;display:flex;justify-content:space-between;gap:14px}
 .gal-note{margin-top:34px;color:var(--dim)}
 
@@ -276,8 +377,8 @@ input[type="date"]{color-scheme:dark}
   grid-column:1/-1;justify-self:start;margin-top:8px;
   border:1px solid rgba(240,0,96,.65);border-radius:999px;
   padding:16px 38px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;font-size:14px;
-  transition:background .5s var(--ease),color .5s var(--ease),box-shadow .5s var(--ease);
-  box-shadow:0 0 calc(8px + var(--pulse)*8px) rgba(240,0,96,calc(.08 + var(--pulse)*.1));
+  transition:background .5s var(--ease),color .5s var(--ease);
+  box-shadow:0 0 8px rgba(240,0,96,.10);
 }
 .bookbtn:hover{background:var(--mag);color:var(--bg)}
 .bookbtn.done{border-color:rgba(18,182,232,.7);background:transparent;color:var(--cyn);cursor:default}
@@ -336,8 +437,10 @@ footer{
   }
   .orbit{display:none}
   .hud{bottom:auto;top:64px;left:22px}
-  .hud .row.optional{display:none}
   #hero{padding-top:16vh;min-height:92vh}
+  .mixplay{gap:16px;padding:16px}
+  .mixart{width:84px;height:84px}
+  .pbadge{width:38px;height:38px}
   form{grid-template-columns:1fr}
   .frame:nth-child(even){width:100%}
   main{padding-bottom:34vh}
@@ -359,31 +462,37 @@ footer{
 </head>
 <body>
 
+<div class="lights" aria-hidden="true">
+  <i class="glow glowA"></i>
+  <i class="glow glowB"></i>
+  <i class="glow glowC"></i>
+</div>
 <div class="grain" aria-hidden="true"></div>
 <div class="vignette" aria-hidden="true"></div>
 
 <header class="top">
   <div class="mark">PEAK<span class="dot">.</span></div>
-  <button class="snd" id="sndbtn" type="button" aria-pressed="false"><span class="led"></span><span class="mono" id="sndlabel" style="color:inherit">Sound off</span></button>
+  <button class="snd" id="sndbtn" type="button" aria-pressed="false"><span class="led"></span><span class="lbl" id="sndlabel" style="color:inherit">Sound off</span></button>
 </header>
 
 <div class="hud mono" aria-hidden="true">
-  <div class="row"><span class="k">BPM</span><span class="v">174.0</span><span class="k">KEY</span><span class="v">8A</span></div>
-  <div class="row"><span class="k">SEC</span><span class="v acc" id="hudsec">HERO</span></div>
-  <div class="row optional"><span class="k">ROT</span><span class="v" id="hudrot">+0000&deg;</span><span class="k">VEL</span><span class="v" id="hudvel">0.00</span></div>
+  <div class="row"><span class="k">BPM</span><span class="v">174.0</span><span class="k">CUE</span><span class="v acc" id="hudsec">HERO</span></div>
 </div>
 
 <div class="progressbar" aria-hidden="true"><i></i></div>
 
 <!-- fixed jog platter -->
-<div class="jogwrap" aria-hidden="true">
+<div class="jogwrap" id="jogwrap" aria-hidden="true">
   <svg class="orbit" viewBox="0 0 500 500">
     <defs><path id="orbpath" d="M250,26 a224,224 0 1,1 -0.01,0" fill="none"></path></defs>
     <text><textPath href="#orbpath">HIGH ENERGY DRUM AND BASS &#183; 174 BPM &#183; BARCELONA &#183; HIGH ENERGY DRUM AND BASS &#183; 174 BPM &#183; BARCELONA &#183; </textPath></text>
   </svg>
+  <div class="cring" id="cring"></div>
   <div class="ticks"></div>
   <div class="ring"></div>
   <div class="tring"></div>
+  <div class="halo"></div>
+  <div class="platshadow"></div>
   <div class="jogimg" id="jog"><img src="assets/jog.png" alt=""></div>
   <div class="marker"></div>
 </div>
@@ -394,13 +503,13 @@ footer{
   <section id="hero" data-cue="HERO">
     <div class="col">
       <div class="reveal in">
-        <p class="mono">Barcelona &#183; NL &#183; <b>174 BPM</b></p>
+        <p class="lbl">Barcelona &#183; NL &#183; <b>174 BPM</b></p>
       </div>
       <h1 class="display reveal in d1">PEAK<span class="dot">.</span></h1>
-      <p class="hero-sub reveal in d2">High energy drum &amp; bass. Every set is a revolution &mdash; cut, weighted, and rolled at 174.</p>
+      <p class="hero-sub reveal in d2">High energy drum &amp; bass. Dutch pressure, Barcelona heat &mdash; locked at 174.</p>
       <div class="scrollcue reveal in d3">
         <span class="wheelico"></span>
-        <span class="mono">Scroll to spin the platter</span>
+        <span class="lbl">Scroll to spin the platter</span>
       </div>
     </div>
   </section>
@@ -415,11 +524,16 @@ footer{
         </svg>
         <h2 class="display">From NL<br>to BCN</h2>
       </div>
-      <p class="lede reveal d1">Dutch-born, Barcelona-based. PEAK took the Dutch drum &amp; bass school south and built a scene around it &mdash; founding <em>DnB Babes BCN</em>, the collective putting women behind the decks of the city&#8217;s heaviest nights.</p>
-      <p class="lede reveal d2" style="font-weight:500;color:var(--mut);font-size:clamp(16px,1.8vw,21px)">From first Barcelona sets in &#8217;22 to the Liquicity Barcelona stage &mdash; on a lineup with Fox Stevenson, Emily Makis and Maduk &mdash; via Mallorca and Utrecht. The circle keeps widening.</p>
+      <p class="lede reveal d1">From Harderwijk to Barcelona. PEAK took the Dutch drum &amp; bass school south and built a scene around it &mdash; co-founding <em>DnBabes</em>, the collective putting women behind the decks of the city&#8217;s heaviest nights.</p>
+      <blockquote class="pull reveal d2">&#8220;Every set is a revolution &mdash; cut, weighted, and rolled at <span class="beat">174</span>.&#8221;</blockquote>
+      <p class="story-p reveal d3">First sets in January 2024. Since then: a homecoming at The Void festival in Utrecht, an Apologia &times; DnBabes night at Sala Apolo, and the Room 2 closing slot at Liquicity Barcelona &mdash; same night as Fox Stevenson, Maduk and Emily Makis. The circle keeps widening.</p>
+      <figure class="press reveal d3">
+        <img src="assets/peak-press-web.jpg" alt="PEAK behind the decks in magenta club light" loading="lazy">
+        <figcaption class="cap mono"><span>PEAK &#183; BARCELONA</span><span>PRESS &#183; 01</span></figcaption>
+      </figure>
       <div class="about-grid reveal d3">
         <img class="portrait" src="assets/peak-portrait.jpg" alt="PEAK portrait">
-        <p><span class="mono" style="display:block;margin-bottom:8px">PEAK &#183; founder, DnB Babes BCN</span>Selector, promoter, community-builder. Booked for high-energy rooms that want the tempo kept honest.</p>
+        <p><span class="lbl" style="display:block;margin-bottom:8px">PEAK &#183; co-founder, DnBabes</span>Drum &amp; Babes Barcelona &mdash; fierce, free and for everyone. Selector, promoter, community-builder; booked for high-energy rooms that want the tempo kept honest.</p>
       </div>
     </div>
   </section>
@@ -433,24 +547,26 @@ footer{
           <text><textPath href="#arc2" startOffset="50%" text-anchor="middle"><tspan class="accfill">02</tspan> &#8212; ON ROTATION</textPath></text>
         </svg>
         <h2 class="display">Music</h2>
-        <p class="mono" style="margin-top:16px">The platter is the player &mdash; press play, watch it turn.</p>
+        <p class="lbl" style="margin-top:16px">The platter is the player &mdash; press play, watch it turn.</p>
       </div>
-      <div class="tracks reveal d1">
-        <button class="trk cur" type="button" data-i="0"><span class="no">A1</span><span class="nm">Peak Hours &#8212; 174 Sessions</span><span class="tm">62:00</span></button>
-        <button class="trk" type="button" data-i="1"><span class="no">A2</span><span class="nm">BCN Rollers</span><span class="tm">48:15</span></button>
-        <button class="trk" type="button" data-i="2"><span class="no">B1</span><span class="nm">Nightshift Vol.02</span><span class="tm">55:40</span></button>
-      </div>
-      <div class="transport reveal d2">
-        <button class="tbtn" id="prevbtn" type="button" aria-label="Previous mix">&#9198;</button>
-        <button class="tbtn play" id="playbtn" type="button" aria-label="Play or pause">&#9654;</button>
-        <button class="tbtn" id="nextbtn" type="button" aria-label="Next mix">&#9197;</button>
-        <span class="tclock"><b id="tcur">00:00</b> / <span id="ttot">62:00</span></span>
+      <div class="mixcard reveal d1">
+        <button class="mixplay" id="mixplay" type="button" aria-label="Play First Public Mix on SoundCloud">
+          <span class="mixart">
+            <img src="assets/peak-mix-artwork.jpg" alt="First Public Mix artwork">
+            <span class="pbadge" aria-hidden="true">&#9654;&#xFE0E;</span>
+          </span>
+          <span class="mixinfo">
+            <span class="mono"><b>A1</b> &#183; Featured mix</span>
+            <span class="mixtitle">First Public Mix &#8212; Dancefloor &amp; Neuro</span>
+            <span class="mixmeta mono">24 MIN &#183; SUB FOCUS &#183; CULTURE SHOCK &#183; CAMO &amp; KROOKED &#183; DUB ELEMENTS</span>
+            <span class="mixcta lbl"><b>&#9654;&#xFE0E;</b>&nbsp; Play on SoundCloud</span>
+          </span>
+        </button>
+        <div class="mixembed" id="mixembed" hidden></div>
       </div>
       <div class="pills reveal d3">
-        <button class="pill" type="button">Spotify &#8599;</button>
-        <button class="pill" type="button">SoundCloud &#8599;</button>
+        <a class="pill" href="https://soundcloud.com/peak_dnb" target="_blank" rel="noopener noreferrer">SoundCloud &#8599;</a>
       </div>
-      <p class="upnext mono reveal d3">Up next &#8212; <b>Nightshift EP &#183; Oct 2026</b></p>
     </div>
   </section>
 
@@ -465,13 +581,13 @@ footer{
         <h2 class="display">The Run</h2>
       </div>
       <div class="tline">
-        <div class="step reveal"><span class="deg">000&deg;</span><div><h3>BCN &#8217;22 &#8212; First sets</h3><p>First Barcelona bookings. The needle drops.</p></div></div>
-        <div class="step reveal"><span class="deg">060&deg;</span><div><h3>&#8217;23 &#8212; Momentum</h3><p>Regular slots, faster rooms, a name that starts circulating.</p></div></div>
-        <div class="step reveal"><span class="deg">120&deg;</span><div><h3>&#8217;24 &#8212; Full circuit</h3><p>Mallorca &#183; Utrecht &#183; Barcelona. The rotation goes international.</p></div></div>
-        <div class="step reveal"><span class="deg">180&deg;</span><div><h3>DnB Babes BCN</h3><p>Founded the collective &mdash; a platform for women in Barcelona drum &amp; bass.</p></div></div>
-        <div class="step reveal"><span class="deg">240&deg;</span><div><h3>Liquicity Barcelona</h3><p>On the bill with Fox Stevenson, Emily Makis and Maduk.</p></div></div>
-        <div class="step reveal"><span class="deg">300&deg;</span><div><h3>2026 &#8212; Current chapter</h3><p>Nightshift era. The platter never stops.</p></div></div>
+        <div class="step reveal"><span class="deg">000&deg;</span><div><h3>Jan &#8217;24 &#8212; First sets</h3><p>Barcelona. The needle drops &mdash; the career begins at 174.</p></div></div>
+        <div class="step reveal"><span class="deg">072&deg;</span><div><h3>&#8217;24 &#8212; Automata nights</h3><p>Barcelona&#8217;s Automata DNB parties &mdash; sharing bills with Subsonic and Freaks &amp; Geeks.</p></div></div>
+        <div class="step reveal"><span class="deg">144&deg;</span><div><h3>Oct &#8217;25 &#8212; The Void, Utrecht</h3><p>Indoor DnB festival, ECLIPSE stage. The NL homecoming.</p></div></div>
+        <div class="step reveal"><span class="deg">216&deg;</span><div><h3>Mar &#8217;26 &#8212; Sala Apolo</h3><p>Apologia &times; DnBabes at La Cinc &mdash; the collective on one of Barcelona&#8217;s biggest stages.</p></div></div>
+        <div class="step now reveal"><span class="deg">288&deg;</span><div><h3>May &#8217;26 &#8212; Liquicity Barcelona</h3><p>Razzmatazz, Room 2 &mdash; the 01:00&#8211;02:00 closing slot. Same night as Fox Stevenson, Maduk and Emily Makis.</p><p class="now-tag lbl"><b>&#9679;</b> The current peak</p></div></div>
       </div>
+      <p class="tline-note lbl reveal">Shared bills &#8212; Serum &#183; Nymfo &#183; Bala &#183; Lilakk</p>
     </div>
   </section>
 
@@ -488,22 +604,22 @@ footer{
       <div class="frames">
         <figure class="frame reveal">
           <img src="assets/booth1.png" alt="PEAK in the booth" loading="lazy">
-          <figcaption class="cap mono"><span>Still 01 &#8212; The booth</span><span>Barcelona</span></figcaption>
+          <figcaption class="cap lbl"><span>Still 01 &#8212; The booth</span><span>Barcelona</span></figcaption>
         </figure>
         <figure class="frame reveal">
           <img src="assets/deck.png" alt="CDJ deck close-up" loading="lazy">
-          <figcaption class="cap mono"><span>Still 02 &#8212; Deck A</span><span>174.0</span></figcaption>
+          <figcaption class="cap lbl"><span>Still 02 &#8212; Deck A</span><span>174.0</span></figcaption>
         </figure>
         <figure class="frame reveal">
           <img src="assets/mixer.png" alt="DJM mixer" loading="lazy">
-          <figcaption class="cap mono"><span>Still 03 &#8212; The mixer</span><span>Faders up</span></figcaption>
+          <figcaption class="cap lbl"><span>Still 03 &#8212; The mixer</span><span>Faders up</span></figcaption>
         </figure>
         <figure class="frame reveal">
           <img src="assets/pads.png" alt="Performance pads" loading="lazy">
-          <figcaption class="cap mono"><span>Still 04 &#8212; Pads</span><span>Hot cues</span></figcaption>
+          <figcaption class="cap lbl"><span>Still 04 &#8212; Pads</span><span>Hot cues</span></figcaption>
         </figure>
       </div>
-      <p class="gal-note mono reveal">Press stills &#8212; swaps for live photography.</p>
+      <p class="gal-note lbl reveal">Press stills + live shots &#8212; more from the booth coming.</p>
     </div>
   </section>
 
@@ -519,7 +635,7 @@ footer{
       </div>
       <form id="bookform" class="reveal d1" novalidate>
         <div class="field">
-          <label class="mono" for="f-type">Event type</label>
+          <label class="lbl" for="f-type">Event type</label>
           <select id="f-type" name="type">
             <option>Club night</option>
             <option>Festival</option>
@@ -528,15 +644,15 @@ footer{
           </select>
         </div>
         <div class="field">
-          <label class="mono" for="f-date">Date</label>
+          <label class="lbl" for="f-date">Date</label>
           <input id="f-date" name="date" type="date">
         </div>
         <div class="field">
-          <label class="mono" for="f-loc">Location</label>
+          <label class="lbl" for="f-loc">Location</label>
           <input id="f-loc" name="location" type="text" placeholder="City, venue" autocomplete="off">
         </div>
         <div class="field">
-          <label class="mono" for="f-aud">Expected audience</label>
+          <label class="lbl" for="f-aud">Expected audience</label>
           <select id="f-aud" name="audience">
             <option>&lt; 200</option>
             <option>200 &#8211; 500</option>
@@ -545,7 +661,7 @@ footer{
           </select>
         </div>
         <div class="field">
-          <label class="mono" for="f-len">Set length</label>
+          <label class="lbl" for="f-len">Set length</label>
           <select id="f-len" name="length">
             <option>60 min</option>
             <option>90 min</option>
@@ -554,11 +670,11 @@ footer{
           </select>
         </div>
         <div class="field">
-          <label class="mono" for="f-bud">Budget</label>
+          <label class="lbl" for="f-bud">Budget</label>
           <input id="f-bud" name="budget" type="text" placeholder="EUR" autocomplete="off">
         </div>
         <button class="bookbtn" id="bookbtn" type="submit">Book PEAK</button>
-        <p class="form-note mono" id="formnote">Demo form &#8212; nothing is sent anywhere.</p>
+        <p class="form-note lbl" id="formnote">Demo form &#8212; nothing is sent anywhere.</p>
       </form>
     </div>
   </section>
@@ -567,25 +683,26 @@ footer{
   <section id="outro" data-cue="OUTRO">
     <div class="col">
       <div class="reveal">
-        <p class="mono"><b>&#9679;</b> Needle still in the groove</p>
+        <p class="lbl"><b>&#9679;</b> Needle still in the groove</p>
         <h2 class="display" style="margin-top:18px">Ready for<br>the next set?</h2>
       </div>
       <div class="ctas reveal d1">
         <a class="cta prime" href="#booking">Book now</a>
         <a class="cta" href="#music">Listen</a>
         <a class="cta" href="https://www.instagram.com/peak.dnb/" target="_blank" rel="noopener noreferrer">Instagram</a>
+        <a class="cta" href="https://soundcloud.com/peak_dnb" target="_blank" rel="noopener noreferrer">SoundCloud</a>
         <button class="cta" id="mgmtbtn" type="button">Management</button>
       </div>
-      <p class="mgmt-note mono" id="mgmtnote">MGMT &#8212; bookings via the form above &#183; demo site, no direct contact wired.</p>
+      <p class="mgmt-note lbl" id="mgmtnote">MGMT &#8212; bookings via the form above &#183; demo site, no direct contact wired.</p>
     </div>
   </section>
 
 </main>
 
 <footer>
-  <span class="mono">PEAK &#183; 2026</span>
-  <span class="mono">Everything turns &#8212; nothing bounces</span>
-  <span class="mono">Built at <b>174 BPM</b></span>
+  <span class="lbl">PEAK &#183; 2026</span>
+  <span class="lbl">Everything turns &#8212; nothing bounces</span>
+  <span class="lbl">Built at <b>174 BPM</b></span>
 </footer>
 
 <div class="cur-ring" id="curring" aria-hidden="true"></div>
@@ -604,20 +721,13 @@ footer{
   var smooth = window.scrollY || 0;       // lerped scroll
   var lastRaw = smooth;
   var velT = 0, vel = 0;                  // target / lerped velocity
-  var playing = false;
+  var playing = false;                    // true once the SoundCloud embed is loaded
   var av = 0;                             // platter angular velocity (deg/s) from playback
   var playAngle = 0;
-  var elapsed = 0;
-  var curTrack = 0;
-  var tracks = [
-    { name:"Peak Hours — 174 Sessions", dur:3720 },
-    { name:"BCN Rollers", dur:2895 },
-    { name:"Nightshift Vol.02", dur:3340 }
-  ];
 
   var jog = document.getElementById("jog");
-  var hudrot = document.getElementById("hudrot");
-  var hudvel = document.getElementById("hudvel");
+  var cring = document.getElementById("cring");
+  var jogwrap = document.getElementById("jogwrap");
   var hudsec = document.getElementById("hudsec");
 
   /* ---------- sound (muted by default, tiny WebAudio blips) ---------- */
@@ -650,39 +760,27 @@ footer{
     if (el && el !== sndbtn) blip(1500);
   });
 
-  /* ---------- player ---------- */
-  var playbtn = document.getElementById("playbtn");
-  var tcur = document.getElementById("tcur");
-  var ttot = document.getElementById("ttot");
-  var trkEls = Array.prototype.slice.call(document.querySelectorAll(".trk"));
-  function fmt(s){
-    s = Math.max(0, Math.floor(s));
-    var m = Math.floor(s / 60), r = s % 60;
-    return (m < 10 ? "0" + m : "" + m) + ":" + (r < 10 ? "0" + r : "" + r);
-  }
-  function loadTrack(i){
-    curTrack = (i + tracks.length) % tracks.length;
-    elapsed = 0;
-    trkEls.forEach(function(el, j){ el.classList.toggle("cur", j === curTrack); });
-    ttot.textContent = fmt(tracks[curTrack].dur);
-    tcur.textContent = fmt(0);
-    root.style.setProperty("--tprog", "0");
-  }
-  function setPlaying(p){
-    playing = p;
-    playbtn.innerHTML = playing ? "&#10073;&#10073;" : "&#9654;";
-    if (playing) document.body.classList.add("hasplay");
-  }
-  playbtn.addEventListener("click", function(){ setPlaying(!playing); });
-  document.getElementById("prevbtn").addEventListener("click", function(){ loadTrack(curTrack - 1); });
-  document.getElementById("nextbtn").addEventListener("click", function(){ loadTrack(curTrack + 1); });
-  trkEls.forEach(function(el){
-    el.addEventListener("click", function(){
-      loadTrack(parseInt(el.getAttribute("data-i"), 10));
-      setPlaying(true);
-    });
+  /* ---------- featured mix: click-to-load SoundCloud embed ----------
+     zero external requests until the user opts in; no Widget API sync —
+     the platter keeps its normal scroll behavior, plus playback spin */
+  var mixplay = document.getElementById("mixplay");
+  var mixembed = document.getElementById("mixembed");
+  mixplay.addEventListener("click", function(){
+    if (!mixembed.hidden) return;
+    var ifr = document.createElement("iframe");
+    ifr.setAttribute("width", "100%");
+    ifr.setAttribute("height", "166");
+    ifr.setAttribute("scrolling", "no");
+    ifr.setAttribute("frameborder", "no");
+    ifr.setAttribute("allow", "autoplay");
+    ifr.title = "PEAK — First Public Mix on SoundCloud";
+    ifr.src = "https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F2158245366&color=%23f00060&auto_play=true&hide_related=true&show_comments=false&show_user=true&visual=false";
+    mixembed.appendChild(ifr);
+    mixembed.hidden = false;
+    mixplay.hidden = true;
+    playing = true;                       // the platter is the player — let it turn
+    blip(1900);
   });
-  loadTrack(0);
 
   /* ---------- booking form (demo intercept) ---------- */
   var bookform = document.getElementById("bookform");
@@ -723,6 +821,26 @@ footer{
     secEls.forEach(function(el){ sio.observe(el); });
   }
 
+  /* ---------- living light: per-section hues [r,g,b] + glow intensities ----------
+     hero magenta / story violet / music magenta+cyan / timeline indigo /
+     gallery warm stage-amber whisper / booking cyan / finale full bloom */
+  var LIGHTS = [
+    { a:[240,0,96],   b:[128,52,220], ga:.60, gb:.28, gc:0 },
+    { a:[150,62,235], b:[240,0,96],   ga:.55, gb:.20, gc:0 },
+    { a:[240,0,96],   b:[18,182,232], ga:.55, gb:.46, gc:0 },
+    { a:[96,78,238],  b:[64,70,210],  ga:.52, gb:.30, gc:0 },
+    { a:[150,62,235], b:[255,172,96], ga:.40, gb:.30, gc:0 },
+    { a:[18,182,232], b:[96,78,238],  ga:.55, gb:.30, gc:0 },
+    { a:[240,0,96],   b:[18,182,232], ga:.82, gb:.72, gc:.85 }
+  ];
+  var secCenters = [], lastDocH = 0, lastIdx = 0, cueUntil = 0;
+  function measureSections(){
+    secCenters = secEls.map(function(el){ return el.offsetTop + el.offsetHeight * 0.5; });
+  }
+  function chan(a, b, f){ return Math.round(a + (b - a) * f); }
+  window.addEventListener("resize", measureSections);
+  measureSections();
+
   /* ---------- custom cursor (fine pointers) ---------- */
   var ring = document.getElementById("curring");
   var dot = document.getElementById("curdot");
@@ -741,6 +859,7 @@ footer{
 
   /* ---------- the ONE rAF loop ---------- */
   var lastT = performance.now();
+  var kick = 0, kickV = 0;                    // damped spring: platter catches cleanly, no reversal
   function frame(now){
     var dt = Math.min(64, now - lastT);
     lastT = now;
@@ -758,34 +877,63 @@ footer{
     vel = lerp(vel, velT, 0.08);
     var velC = clamp(vel, -40, 40);
     root.style.setProperty("--vel", velC.toFixed(2));
+    root.style.setProperty("--velabs", Math.abs(velC).toFixed(2));
 
     // site progress
     var max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
     var prog = clamp(smooth / max, 0, 1);
     root.style.setProperty("--prog", prog.toFixed(4));
 
-    // platter physics: scroll scrub + playback inertia (+ a velocity kick)
+    // living light: blend section hues around the viewport centre
+    var docH = document.documentElement.scrollHeight;
+    if (docH !== lastDocH) { lastDocH = docH; measureSections(); }
+    var viewC = smooth + window.innerHeight * 0.5;
+    var tf = 0, n = secCenters.length;
+    if (n > 1) {
+      if (viewC <= secCenters[0]) tf = 0;
+      else if (viewC >= secCenters[n - 1]) tf = n - 1;
+      else {
+        for (var si = 0; si < n - 1; si++) {
+          if (viewC < secCenters[si + 1]) {
+            tf = si + (viewC - secCenters[si]) / (secCenters[si + 1] - secCenters[si]);
+            break;
+          }
+        }
+      }
+    }
+    var i0 = clamp(Math.floor(tf), 0, LIGHTS.length - 1);
+    var i1 = Math.min(LIGHTS.length - 1, i0 + 1);
+    var f = clamp(tf - i0, 0, 1);
+    var LA = LIGHTS[i0], LB = LIGHTS[i1];
+    root.style.setProperty("--la", chan(LA.a[0], LB.a[0], f) + "," + chan(LA.a[1], LB.a[1], f) + "," + chan(LA.a[2], LB.a[2], f));
+    root.style.setProperty("--lb", chan(LA.b[0], LB.b[0], f) + "," + chan(LA.b[1], LB.b[1], f) + "," + chan(LA.b[2], LB.b[2], f));
+    root.style.setProperty("--ga", lerp(LA.ga, LB.ga, f).toFixed(3));
+    root.style.setProperty("--gb", lerp(LA.gb, LB.gb, f).toFixed(3));
+    root.style.setProperty("--gc", lerp(LA.gc, LB.gc, f).toFixed(3));
+
+    // cue point: flash the orbit when crossing a section boundary
+    var idx = Math.round(tf);
+    if (idx !== lastIdx) {
+      lastIdx = idx;
+      if (jogwrap) jogwrap.classList.add("cue");
+      cueUntil = now + 620;
+      blip(1900);
+    }
+    if (cueUntil && now > cueUntil) {
+      if (jogwrap) jogwrap.classList.remove("cue");
+      cueUntil = 0;
+    }
+
+    // platter physics: scroll scrub + playback inertia + sprung velocity kick
     var targetAv = playing ? 200 : 0;         // ~33 1/3 rpm when playing
     av = lerp(av, targetAv, 0.035);           // weighty spin-up / spin-down
     playAngle += av * dt / 1000;
-    var angle = smooth * 0.28 + playAngle + velC * 0.6;
+    kickV += (velC * 0.6 - kick) * 0.09;      // stiffness
+    kickV *= 0.80;                            // firm damping -> weighted catch, no bounce-back
+    kick += kickV;
+    var angle = smooth * 0.28 + playAngle + kick;
     if (!RM && jog) jog.style.transform = "rotate(" + angle.toFixed(2) + "deg)";
-
-    // playback clock
-    if (playing) {
-      elapsed += dt / 1000;
-      var d = tracks[curTrack].dur;
-      if (elapsed >= d) { loadTrack(curTrack + 1); }
-      else {
-        tcur.textContent = fmt(elapsed);
-        root.style.setProperty("--tprog", (elapsed / d).toFixed(4));
-      }
-    }
-
-    // HUD readouts
-    var shown = Math.round(((angle % 360) + 360) % 360);
-    hudrot.textContent = "+" + ("000" + shown).slice(-4) + "°";
-    hudvel.textContent = Math.abs(velC).toFixed(2);
+    if (!RM && cring) cring.style.transform = "rotate(" + (-angle * 0.32).toFixed(2) + "deg)";
 
     // cursor ring trails with lerp
     if (finePointer) {
