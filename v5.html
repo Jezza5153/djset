@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PEAK — Rotation</title>
+<style>
+:root{
+  --bg:#07080b;
+  --ink:#f2f4f7;
+  --mag:#f00060;
+  --cyn:#12b6e8;
+  --mut:rgba(242,244,247,.52);
+  --dim:rgba(242,244,247,.28);
+  --line:rgba(242,244,247,.1);
+  --pulse:0;
+  --vel:0;
+  --prog:0;
+  --tprog:0;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{background:var(--bg);color:var(--ink)}
+body{
+  font-family:system-ui,-apple-system,"SF Pro Display","Helvetica Neue",Arial,sans-serif;
+  overflow-x:hidden;overflow-x:clip;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--mag);color:var(--bg)}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* ---------- mono micro-label ---------- */
+.mono{
+  font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--mut);
+}
+.mono b{color:var(--mag);font-weight:600}
+
+/* ---------- display type ---------- */
+.display{
+  font-weight:900;text-transform:uppercase;
+  letter-spacing:-.04em;line-height:.92;
+  transform:skewY(calc(var(--vel) * -0.14deg));
+  will-change:transform;
+}
+h1.display{font-size:clamp(64px,14vw,190px)}
+h2.display{font-size:clamp(38px,6.4vw,92px)}
+.dot{color:var(--mag)}
+
+/* ---------- grain + vignette ---------- */
+.grain{
+  position:fixed;inset:-40px;z-index:60;pointer-events:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity:.05;mix-blend-mode:overlay;
+}
+.vignette{
+  position:fixed;inset:0;z-index:59;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 42%,transparent 52%,rgba(0,0,0,.55) 100%);
+}
+
+/* ---------- header ---------- */
+.top{
+  position:fixed;top:0;left:0;right:0;z-index:70;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:22px clamp(20px,4vw,54px);
+  mix-blend-mode:normal;
+}
+.mark{font-weight:900;font-size:20px;letter-spacing:-.03em;text-transform:uppercase}
+.snd{
+  border:1px solid var(--line);border-radius:999px;
+  padding:8px 16px;color:var(--mut);
+  transition:border-color .5s var(--ease),color .5s var(--ease);
+}
+.snd.on{color:var(--ink);border-color:rgba(240,0,96,.6)}
+.snd .led{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--dim);margin-right:8px;vertical-align:1px}
+.snd.on .led{background:var(--mag);box-shadow:0 0 calc(4px + var(--pulse)*5px) rgba(240,0,96,calc(.4 + var(--pulse)*.4))}
+
+/* ---------- HUD ---------- */
+.hud{
+  position:fixed;left:clamp(20px,4vw,54px);bottom:26px;z-index:70;
+  display:flex;flex-direction:column;gap:5px;pointer-events:none;
+}
+.hud .row{display:flex;gap:14px}
+.hud .k{color:var(--dim)}
+.hud .v{color:var(--ink)}
+.hud .v.acc{color:var(--mag)}
+
+/* ---------- scroll progress ---------- */
+.progressbar{
+  position:fixed;left:0;right:0;bottom:0;height:2px;z-index:80;
+  background:rgba(242,244,247,.06);
+}
+.progressbar i{
+  position:absolute;inset:0;display:block;
+  background:linear-gradient(90deg,var(--mag),var(--cyn));
+  transform-origin:0 50%;transform:scaleX(var(--prog));
+}
+
+/* ---------- jog assembly ---------- */
+.jogwrap{
+  position:fixed;top:50%;right:0;z-index:1;pointer-events:none;
+  width:min(82vmin,880px);aspect-ratio:1;
+  transform:translate(37%,-50%);
+}
+.jogwrap > *{position:absolute;border-radius:50%}
+.ticks{
+  inset:0;
+  background:repeating-conic-gradient(from 0deg,rgba(242,244,247,.34) 0 .35deg,transparent .35deg 6deg);
+  -webkit-mask:radial-gradient(closest-side,transparent calc(100% - 12px),#000 calc(100% - 11px));
+  mask:radial-gradient(closest-side,transparent calc(100% - 12px),#000 calc(100% - 11px));
+  opacity:.5;
+}
+.ring{
+  inset:2.2%;
+  background:conic-gradient(from -90deg,var(--mag),var(--cyn) calc(var(--prog)*1turn),rgba(242,244,247,.05) 0);
+  -webkit-mask:radial-gradient(closest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
+  mask:radial-gradient(closest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
+  filter:drop-shadow(0 0 calc(3px + var(--pulse)*4px) rgba(240,0,96,calc(.25 + var(--pulse)*.2)));
+}
+.tring{
+  inset:5%;
+  background:conic-gradient(from -90deg,var(--cyn) calc(var(--tprog)*1turn),rgba(242,244,247,.04) 0);
+  -webkit-mask:radial-gradient(closest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  mask:radial-gradient(closest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  opacity:0;transition:opacity .8s var(--ease);
+}
+body.hasplay .tring{opacity:.9}
+.orbit{inset:-4.5%;border-radius:0;animation:orbitspin 70s linear infinite}
+.orbit text{
+  font-family:ui-monospace,"SF Mono",Menlo,monospace;
+  font-size:15.5px;letter-spacing:.42em;
+  fill:rgba(242,244,247,.4);
+}
+@keyframes orbitspin{to{transform:rotate(360deg)}}
+.jogimg{
+  inset:8.5%;overflow:hidden;
+  box-shadow:0 0 90px rgba(240,0,96,calc(.10 + var(--pulse)*.06)),0 30px 120px rgba(0,0,0,.6);
+  will-change:transform;
+}
+.jogimg img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.hub{
+  left:50%;top:50%;transform:translate(-50%,-50%);
+  text-align:center;color:var(--mut);
+}
+.marker{
+  left:50%;top:2.2%;width:2px;height:5.5%;border-radius:1px;
+  transform:translateX(-50%);
+  background:linear-gradient(var(--mag),transparent);
+  opacity:.9;
+}
+
+/* ---------- layout ---------- */
+main{position:relative;z-index:2}
+.col{
+  width:min(660px,54vw);
+  margin-left:clamp(20px,7vw,110px);
+}
+section{padding:19vh 0 15vh}
+.arc{width:200px;height:70px;display:block;margin-bottom:-6px}
+.arc text{
+  font-family:ui-monospace,"SF Mono",Menlo,monospace;
+  font-size:12.5px;letter-spacing:.34em;fill:var(--dim);text-transform:uppercase;
+}
+.arc .accfill{fill:var(--mag)}
+
+/* ---------- reveals ---------- */
+.reveal{opacity:0;transform:translateY(6.5vh);will-change:transform,opacity}
+.reveal.in{
+  opacity:1;transform:none;
+  transition:opacity .7s var(--ease),transform .7s var(--ease);
+  animation:chroma .62s var(--ease) both;
+}
+@keyframes chroma{
+  0%{text-shadow:-7px 0 rgba(240,0,96,.55),7px 0 rgba(18,182,232,.45)}
+  100%{text-shadow:0 0 rgba(0,0,0,0)}
+}
+.d1{transition-delay:.06s}.d2{transition-delay:.12s}.d3{transition-delay:.18s}
+
+/* ---------- hero ---------- */
+#hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding-top:12vh}
+.hero-sub{margin-top:26px;font-size:clamp(15px,1.6vw,20px);color:var(--mut);max-width:34ch}
+.scrollcue{margin-top:9vh;display:flex;align-items:center;gap:16px;color:var(--dim)}
+.scrollcue .wheelico{
+  width:26px;height:26px;border:1px solid var(--line);border-radius:50%;
+  position:relative;flex:none;
+  animation:cuespin 6s linear infinite;
+}
+.scrollcue .wheelico::after{
+  content:"";position:absolute;left:50%;top:2px;width:2px;height:6px;
+  background:var(--mag);transform:translateX(-50%);border-radius:1px;
+}
+@keyframes cuespin{to{transform:rotate(360deg)}}
+
+/* ---------- about ---------- */
+.lede{font-size:clamp(19px,2.2vw,27px);font-weight:600;line-height:1.4;letter-spacing:-.01em;margin-top:34px}
+.lede em{font-style:normal;color:var(--mag)}
+.about-grid{margin-top:44px;display:flex;gap:26px;align-items:flex-start;border-top:1px solid var(--line);padding-top:30px}
+.portrait{width:78px;height:78px;border-radius:50%;object-fit:cover;filter:grayscale(1);flex:none;border:1px solid var(--line)}
+.about-grid p{color:var(--mut);font-size:15px;max-width:46ch}
+
+/* ---------- music ---------- */
+.tracks{margin-top:40px;border-top:1px solid var(--line)}
+.trk{
+  width:100%;display:flex;align-items:baseline;gap:18px;text-align:left;
+  padding:20px 6px;border-bottom:1px solid var(--line);
+  transition:background .5s var(--ease);
+}
+.trk:hover{background:rgba(242,244,247,.03)}
+.trk .no{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;color:var(--dim);width:28px;flex:none}
+.trk .nm{font-weight:800;text-transform:uppercase;letter-spacing:-.02em;font-size:clamp(17px,2vw,23px);flex:1}
+.trk .tm{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;color:var(--mut);letter-spacing:.12em}
+.trk.cur .no{color:var(--mag)}
+.trk.cur .nm{color:var(--mag)}
+.transport{margin-top:34px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.tbtn{
+  width:52px;height:52px;border:1px solid var(--line);border-radius:50%;
+  display:grid;place-items:center;font-size:14px;color:var(--ink);
+  transition:border-color .5s var(--ease),transform .5s var(--ease);
+}
+.tbtn:hover{border-color:rgba(240,0,96,.65)}
+.tbtn.play{width:66px;height:66px;border-color:rgba(240,0,96,.55);box-shadow:0 0 calc(10px + var(--pulse)*10px) rgba(240,0,96,calc(.12 + var(--pulse)*.12))}
+.tclock{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;letter-spacing:.16em;color:var(--mut);margin-left:8px}
+.tclock b{color:var(--ink);font-weight:500}
+.pills{margin-top:30px;display:flex;gap:12px;flex-wrap:wrap}
+.pill{
+  border:1px solid var(--line);border-radius:999px;padding:10px 20px;
+  font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mut);
+  transition:border-color .5s var(--ease),color .5s var(--ease);
+}
+.pill:hover{color:var(--ink);border-color:rgba(18,182,232,.6)}
+.upnext{margin-top:26px;color:var(--dim)}
+.upnext b{color:var(--cyn);font-weight:600}
+
+/* ---------- timeline ---------- */
+.tline{margin-top:44px;border-top:1px solid var(--line)}
+.step{display:flex;gap:22px;padding:24px 6px;border-bottom:1px solid var(--line);align-items:baseline}
+.step .deg{
+  font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;letter-spacing:.18em;
+  color:var(--mag);width:64px;flex:none;
+}
+.step h3{font-weight:800;text-transform:uppercase;letter-spacing:-.02em;font-size:clamp(16px,1.9vw,22px)}
+.step p{color:var(--mut);font-size:14px;margin-top:4px;max-width:44ch}
+
+/* ---------- gallery ---------- */
+.frames{margin-top:44px;display:flex;flex-direction:column;gap:8vh}
+.frame{position:relative}
+.frame img{
+  width:100%;aspect-ratio:16/10;object-fit:cover;
+  border:1px solid var(--line);
+  filter:saturate(.85) contrast(1.05);
+}
+.frame:nth-child(even){width:86%;margin-left:auto}
+.cap{margin-top:12px;display:flex;justify-content:space-between;gap:14px}
+.gal-note{margin-top:34px;color:var(--dim)}
+
+/* ---------- booking ---------- */
+form{margin-top:44px;display:grid;grid-template-columns:1fr 1fr;gap:26px 26px}
+.field{display:flex;flex-direction:column;gap:9px}
+.field.full{grid-column:1/-1}
+.field input,.field select{
+  background:transparent;border:0;border-bottom:1px solid var(--line);
+  color:var(--ink);font:inherit;font-size:15px;padding:9px 2px;
+  border-radius:0;outline:none;
+  transition:border-color .5s var(--ease);
+}
+.field input:focus,.field select:focus{border-color:var(--mag)}
+.field select option{background:#0c0d12;color:var(--ink)}
+.field input::placeholder{color:var(--dim)}
+input[type="date"]{color-scheme:dark}
+.bookbtn{
+  grid-column:1/-1;justify-self:start;margin-top:8px;
+  border:1px solid rgba(240,0,96,.65);border-radius:999px;
+  padding:16px 38px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;font-size:14px;
+  transition:background .5s var(--ease),color .5s var(--ease),box-shadow .5s var(--ease);
+  box-shadow:0 0 calc(8px + var(--pulse)*8px) rgba(240,0,96,calc(.08 + var(--pulse)*.1));
+}
+.bookbtn:hover{background:var(--mag);color:var(--bg)}
+.bookbtn.done{border-color:rgba(18,182,232,.7);background:transparent;color:var(--cyn);cursor:default}
+.form-note{grid-column:1/-1;color:var(--dim)}
+
+/* ---------- outro ---------- */
+#outro{min-height:78vh;display:flex;flex-direction:column;justify-content:center}
+.ctas{margin-top:44px;display:flex;gap:12px;flex-wrap:wrap}
+.cta{
+  border:1px solid var(--line);border-radius:999px;padding:13px 26px;
+  font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.08em;
+  transition:border-color .5s var(--ease),background .5s var(--ease),color .5s var(--ease);
+  display:inline-block;
+}
+.cta.prime{border-color:rgba(240,0,96,.65)}
+.cta:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cta.prime:hover{background:var(--mag);border-color:var(--mag);color:var(--bg)}
+.mgmt-note{margin-top:20px;color:var(--dim);opacity:0;transition:opacity .6s var(--ease)}
+.mgmt-note.show{opacity:1}
+
+/* ---------- footer ---------- */
+footer{
+  padding:40px clamp(20px,7vw,110px) 60px;
+  border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
+}
+
+/* ---------- cursor ---------- */
+.cur-ring,.cur-dot{display:none}
+@media (pointer:fine){
+  body{cursor:none}
+  a,button,select,input,label{cursor:none}
+  .cur-ring{
+    display:block;position:fixed;left:0;top:0;z-index:200;pointer-events:none;
+    width:30px;height:30px;border:1px solid rgba(242,244,247,.75);border-radius:50%;
+    transform:translate(-50%,-50%);
+    transition:width .35s var(--ease),height .35s var(--ease),border-color .35s var(--ease);
+  }
+  .cur-dot{
+    display:block;position:fixed;left:0;top:0;z-index:200;pointer-events:none;
+    width:4px;height:4px;background:var(--mag);border-radius:50%;
+    transform:translate(-50%,-50%);
+  }
+  .cur-ring.hov{width:52px;height:52px;border-color:rgba(240,0,96,.85)}
+}
+
+/* ---------- mobile ---------- */
+@media (max-width:820px){
+  .col{width:auto;margin:0 22px}
+  section{padding:14vh 0 10vh}
+  .jogwrap{
+    top:auto;bottom:0;right:50%;
+    width:88vw;max-width:420px;
+    transform:translate(50%,56%);
+    opacity:.92;
+  }
+  .orbit{display:none}
+  .hud{bottom:auto;top:64px;left:22px}
+  .hud .row.optional{display:none}
+  #hero{padding-top:16vh;min-height:92vh}
+  form{grid-template-columns:1fr}
+  .frame:nth-child(even){width:100%}
+  main{padding-bottom:34vh}
+  .display{transform:none}
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none !important;transition:none !important}
+  .reveal{opacity:1 !important;transform:none !important}
+  .display{transform:none !important}
+  .jogimg,.orbit,.scrollcue .wheelico{animation:none !important}
+  .cur-ring,.cur-dot{display:none}
+  body{cursor:auto}
+  a,button,select,input,label{cursor:pointer}
+}
+</style>
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="mark">PEAK<span class="dot">.</span></div>
+  <button class="snd" id="sndbtn" type="button" aria-pressed="false"><span class="led"></span><span class="mono" id="sndlabel" style="color:inherit">Sound off</span></button>
+</header>
+
+<div class="hud mono" aria-hidden="true">
+  <div class="row"><span class="k">BPM</span><span class="v">174.0</span><span class="k">KEY</span><span class="v">8A</span></div>
+  <div class="row"><span class="k">SEC</span><span class="v acc" id="hudsec">HERO</span></div>
+  <div class="row optional"><span class="k">ROT</span><span class="v" id="hudrot">+0000&deg;</span><span class="k">VEL</span><span class="v" id="hudvel">0.00</span></div>
+</div>
+
+<div class="progressbar" aria-hidden="true"><i></i></div>
+
+<!-- fixed jog platter -->
+<div class="jogwrap" aria-hidden="true">
+  <svg class="orbit" viewBox="0 0 500 500">
+    <defs><path id="orbpath" d="M250,26 a224,224 0 1,1 -0.01,0" fill="none"></path></defs>
+    <text><textPath href="#orbpath">HIGH ENERGY DRUM AND BASS &#183; 174 BPM &#183; BARCELONA &#183; HIGH ENERGY DRUM AND BASS &#183; 174 BPM &#183; BARCELONA &#183; </textPath></text>
+  </svg>
+  <div class="ticks"></div>
+  <div class="ring"></div>
+  <div class="tring"></div>
+  <div class="jogimg" id="jog"><img src="assets/jog.png" alt=""></div>
+  <div class="marker"></div>
+</div>
+
+<main>
+
+  <!-- HERO -->
+  <section id="hero" data-cue="HERO">
+    <div class="col">
+      <div class="reveal in">
+        <p class="mono">Barcelona &#183; NL &#183; <b>174 BPM</b></p>
+      </div>
+      <h1 class="display reveal in d1">PEAK<span class="dot">.</span></h1>
+      <p class="hero-sub reveal in d2">High energy drum &amp; bass. Every set is a revolution &mdash; cut, weighted, and rolled at 174.</p>
+      <div class="scrollcue reveal in d3">
+        <span class="wheelico"></span>
+        <span class="mono">Scroll to spin the platter</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" data-cue="ABOUT">
+    <div class="col">
+      <div class="reveal">
+        <svg class="arc" viewBox="0 0 240 80" aria-hidden="true">
+          <defs><path id="arc1" d="M20,74 A160,160 0 0 1 220,74" fill="none"></path></defs>
+          <text><textPath href="#arc1" startOffset="50%" text-anchor="middle"><tspan class="accfill">01</tspan> &#8212; THE STORY</textPath></text>
+        </svg>
+        <h2 class="display">From NL<br>to BCN</h2>
+      </div>
+      <p class="lede reveal d1">Dutch-born, Barcelona-based. PEAK took the Dutch drum &amp; bass school south and built a scene around it &mdash; founding <em>DnB Babes BCN</em>, the collective putting women behind the decks of the city&#8217;s heaviest nights.</p>
+      <p class="lede reveal d2" style="font-weight:500;color:var(--mut);font-size:clamp(16px,1.8vw,21px)">From first Barcelona sets in &#8217;22 to the Liquicity Barcelona stage &mdash; on a lineup with Fox Stevenson, Emily Makis and Maduk &mdash; via Mallorca and Utrecht. The circle keeps widening.</p>
+      <div class="about-grid reveal d3">
+        <img class="portrait" src="assets/peak-portrait.jpg" alt="PEAK portrait">
+        <p><span class="mono" style="display:block;margin-bottom:8px">PEAK &#183; founder, DnB Babes BCN</span>Selector, promoter, community-builder. Booked for high-energy rooms that want the tempo kept honest.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MUSIC -->
+  <section id="music" data-cue="MUSIC">
+    <div class="col">
+      <div class="reveal">
+        <svg class="arc" viewBox="0 0 240 80" aria-hidden="true">
+          <defs><path id="arc2" d="M20,74 A160,160 0 0 1 220,74" fill="none"></path></defs>
+          <text><textPath href="#arc2" startOffset="50%" text-anchor="middle"><tspan class="accfill">02</tspan> &#8212; ON ROTATION</textPath></text>
+        </svg>
+        <h2 class="display">Music</h2>
+        <p class="mono" style="margin-top:16px">The platter is the player &mdash; press play, watch it turn.</p>
+      </div>
+      <div class="tracks reveal d1">
+        <button class="trk cur" type="button" data-i="0"><span class="no">A1</span><span class="nm">Peak Hours &#8212; 174 Sessions</span><span class="tm">62:00</span></button>
+        <button class="trk" type="button" data-i="1"><span class="no">A2</span><span class="nm">BCN Rollers</span><span class="tm">48:15</span></button>
+        <button class="trk" type="button" data-i="2"><span class="no">B1</span><span class="nm">Nightshift Vol.02</span><span class="tm">55:40</span></button>
+      </div>
+      <div class="transport reveal d2">
+        <button class="tbtn" id="prevbtn" type="button" aria-label="Previous mix">&#9198;</button>
+        <button class="tbtn play" id="playbtn" type="button" aria-label="Play or pause">&#9654;</button>
+        <button class="tbtn" id="nextbtn" type="button" aria-label="Next mix">&#9197;</button>
+        <span class="tclock"><b id="tcur">00:00</b> / <span id="ttot">62:00</span></span>
+      </div>
+      <div class="pills reveal d3">
+        <button class="pill" type="button">Spotify &#8599;</button>
+        <button class="pill" type="button">SoundCloud &#8599;</button>
+      </div>
+      <p class="upnext mono reveal d3">Up next &#8212; <b>Nightshift EP &#183; Oct 2026</b></p>
+    </div>
+  </section>
+
+  <!-- TIMELINE -->
+  <section id="timeline" data-cue="TIMELINE">
+    <div class="col">
+      <div class="reveal">
+        <svg class="arc" viewBox="0 0 240 80" aria-hidden="true">
+          <defs><path id="arc3" d="M20,74 A160,160 0 0 1 220,74" fill="none"></path></defs>
+          <text><textPath href="#arc3" startOffset="50%" text-anchor="middle"><tspan class="accfill">03</tspan> &#8212; ONE FULL TURN</textPath></text>
+        </svg>
+        <h2 class="display">The Run</h2>
+      </div>
+      <div class="tline">
+        <div class="step reveal"><span class="deg">000&deg;</span><div><h3>BCN &#8217;22 &#8212; First sets</h3><p>First Barcelona bookings. The needle drops.</p></div></div>
+        <div class="step reveal"><span class="deg">060&deg;</span><div><h3>&#8217;23 &#8212; Momentum</h3><p>Regular slots, faster rooms, a name that starts circulating.</p></div></div>
+        <div class="step reveal"><span class="deg">120&deg;</span><div><h3>&#8217;24 &#8212; Full circuit</h3><p>Mallorca &#183; Utrecht &#183; Barcelona. The rotation goes international.</p></div></div>
+        <div class="step reveal"><span class="deg">180&deg;</span><div><h3>DnB Babes BCN</h3><p>Founded the collective &mdash; a platform for women in Barcelona drum &amp; bass.</p></div></div>
+        <div class="step reveal"><span class="deg">240&deg;</span><div><h3>Liquicity Barcelona</h3><p>On the bill with Fox Stevenson, Emily Makis and Maduk.</p></div></div>
+        <div class="step reveal"><span class="deg">300&deg;</span><div><h3>2026 &#8212; Current chapter</h3><p>Nightshift era. The platter never stops.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <section id="gallery" data-cue="GALLERY">
+    <div class="col">
+      <div class="reveal">
+        <svg class="arc" viewBox="0 0 240 80" aria-hidden="true">
+          <defs><path id="arc4" d="M20,74 A160,160 0 0 1 220,74" fill="none"></path></defs>
+          <text><textPath href="#arc4" startOffset="50%" text-anchor="middle"><tspan class="accfill">04</tspan> &#8212; STILLS</textPath></text>
+        </svg>
+        <h2 class="display">Frames</h2>
+      </div>
+      <div class="frames">
+        <figure class="frame reveal">
+          <img src="assets/booth1.png" alt="PEAK in the booth" loading="lazy">
+          <figcaption class="cap mono"><span>Still 01 &#8212; The booth</span><span>Barcelona</span></figcaption>
+        </figure>
+        <figure class="frame reveal">
+          <img src="assets/deck.png" alt="CDJ deck close-up" loading="lazy">
+          <figcaption class="cap mono"><span>Still 02 &#8212; Deck A</span><span>174.0</span></figcaption>
+        </figure>
+        <figure class="frame reveal">
+          <img src="assets/mixer.png" alt="DJM mixer" loading="lazy">
+          <figcaption class="cap mono"><span>Still 03 &#8212; The mixer</span><span>Faders up</span></figcaption>
+        </figure>
+        <figure class="frame reveal">
+          <img src="assets/pads.png" alt="Performance pads" loading="lazy">
+          <figcaption class="cap mono"><span>Still 04 &#8212; Pads</span><span>Hot cues</span></figcaption>
+        </figure>
+      </div>
+      <p class="gal-note mono reveal">Press stills &#8212; swaps for live photography.</p>
+    </div>
+  </section>
+
+  <!-- BOOKING -->
+  <section id="booking" data-cue="BOOKING">
+    <div class="col">
+      <div class="reveal">
+        <svg class="arc" viewBox="0 0 240 80" aria-hidden="true">
+          <defs><path id="arc5" d="M20,74 A160,160 0 0 1 220,74" fill="none"></path></defs>
+          <text><textPath href="#arc5" startOffset="50%" text-anchor="middle"><tspan class="accfill">05</tspan> &#8212; GET ON THE DECKS</textPath></text>
+        </svg>
+        <h2 class="display">Booking</h2>
+      </div>
+      <form id="bookform" class="reveal d1" novalidate>
+        <div class="field">
+          <label class="mono" for="f-type">Event type</label>
+          <select id="f-type" name="type">
+            <option>Club night</option>
+            <option>Festival</option>
+            <option>Private event</option>
+            <option>Radio / stream</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="mono" for="f-date">Date</label>
+          <input id="f-date" name="date" type="date">
+        </div>
+        <div class="field">
+          <label class="mono" for="f-loc">Location</label>
+          <input id="f-loc" name="location" type="text" placeholder="City, venue" autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="mono" for="f-aud">Expected audience</label>
+          <select id="f-aud" name="audience">
+            <option>&lt; 200</option>
+            <option>200 &#8211; 500</option>
+            <option>500 &#8211; 2000</option>
+            <option>2000+</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="mono" for="f-len">Set length</label>
+          <select id="f-len" name="length">
+            <option>60 min</option>
+            <option>90 min</option>
+            <option>120 min</option>
+            <option>All night</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="mono" for="f-bud">Budget</label>
+          <input id="f-bud" name="budget" type="text" placeholder="EUR" autocomplete="off">
+        </div>
+        <button class="bookbtn" id="bookbtn" type="submit">Book PEAK</button>
+        <p class="form-note mono" id="formnote">Demo form &#8212; nothing is sent anywhere.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- OUTRO -->
+  <section id="outro" data-cue="OUTRO">
+    <div class="col">
+      <div class="reveal">
+        <p class="mono"><b>&#9679;</b> Needle still in the groove</p>
+        <h2 class="display" style="margin-top:18px">Ready for<br>the next set?</h2>
+      </div>
+      <div class="ctas reveal d1">
+        <a class="cta prime" href="#booking">Book now</a>
+        <a class="cta" href="#music">Listen</a>
+        <a class="cta" href="https://www.instagram.com/peak.dnb/" target="_blank" rel="noopener noreferrer">Instagram</a>
+        <button class="cta" id="mgmtbtn" type="button">Management</button>
+      </div>
+      <p class="mgmt-note mono" id="mgmtnote">MGMT &#8212; bookings via the form above &#183; demo site, no direct contact wired.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span class="mono">PEAK &#183; 2026</span>
+  <span class="mono">Everything turns &#8212; nothing bounces</span>
+  <span class="mono">Built at <b>174 BPM</b></span>
+</footer>
+
+<div class="cur-ring" id="curring" aria-hidden="true"></div>
+<div class="cur-dot" id="curdot" aria-hidden="true"></div>
+
+<script>
+(function(){
+  "use strict";
+  var RM = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var root = document.documentElement;
+  var lerp = function(a,b,t){ return a + (b - a) * t; };
+  var clamp = function(v,lo,hi){ return Math.min(hi, Math.max(lo, v)); };
+
+  /* ---------- shared state ---------- */
+  var BEAT = 60000 / 174;                 // one beat in ms
+  var smooth = window.scrollY || 0;       // lerped scroll
+  var lastRaw = smooth;
+  var velT = 0, vel = 0;                  // target / lerped velocity
+  var playing = false;
+  var av = 0;                             // platter angular velocity (deg/s) from playback
+  var playAngle = 0;
+  var elapsed = 0;
+  var curTrack = 0;
+  var tracks = [
+    { name:"Peak Hours — 174 Sessions", dur:3720 },
+    { name:"BCN Rollers", dur:2895 },
+    { name:"Nightshift Vol.02", dur:3340 }
+  ];
+
+  var jog = document.getElementById("jog");
+  var hudrot = document.getElementById("hudrot");
+  var hudvel = document.getElementById("hudvel");
+  var hudsec = document.getElementById("hudsec");
+
+  /* ---------- sound (muted by default, tiny WebAudio blips) ---------- */
+  var soundOn = false, actx = null;
+  function blip(freq){
+    if (!soundOn) return;
+    try {
+      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === "suspended") actx.resume();
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = "square";
+      o.frequency.value = freq || 1600;
+      g.gain.setValueAtTime(0.05, actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + 0.07);
+      o.connect(g); g.connect(actx.destination);
+      o.start(); o.stop(actx.currentTime + 0.08);
+    } catch(e) {}
+  }
+  var sndbtn = document.getElementById("sndbtn");
+  var sndlabel = document.getElementById("sndlabel");
+  sndbtn.addEventListener("click", function(){
+    soundOn = !soundOn;
+    sndbtn.classList.toggle("on", soundOn);
+    sndbtn.setAttribute("aria-pressed", String(soundOn));
+    sndlabel.textContent = soundOn ? "Sound on" : "Sound off";
+    blip(2100);
+  });
+  document.addEventListener("click", function(e){
+    var el = e.target.closest ? e.target.closest("a,button") : null;
+    if (el && el !== sndbtn) blip(1500);
+  });
+
+  /* ---------- player ---------- */
+  var playbtn = document.getElementById("playbtn");
+  var tcur = document.getElementById("tcur");
+  var ttot = document.getElementById("ttot");
+  var trkEls = Array.prototype.slice.call(document.querySelectorAll(".trk"));
+  function fmt(s){
+    s = Math.max(0, Math.floor(s));
+    var m = Math.floor(s / 60), r = s % 60;
+    return (m < 10 ? "0" + m : "" + m) + ":" + (r < 10 ? "0" + r : "" + r);
+  }
+  function loadTrack(i){
+    curTrack = (i + tracks.length) % tracks.length;
+    elapsed = 0;
+    trkEls.forEach(function(el, j){ el.classList.toggle("cur", j === curTrack); });
+    ttot.textContent = fmt(tracks[curTrack].dur);
+    tcur.textContent = fmt(0);
+    root.style.setProperty("--tprog", "0");
+  }
+  function setPlaying(p){
+    playing = p;
+    playbtn.innerHTML = playing ? "&#10073;&#10073;" : "&#9654;";
+    if (playing) document.body.classList.add("hasplay");
+  }
+  playbtn.addEventListener("click", function(){ setPlaying(!playing); });
+  document.getElementById("prevbtn").addEventListener("click", function(){ loadTrack(curTrack - 1); });
+  document.getElementById("nextbtn").addEventListener("click", function(){ loadTrack(curTrack + 1); });
+  trkEls.forEach(function(el){
+    el.addEventListener("click", function(){
+      loadTrack(parseInt(el.getAttribute("data-i"), 10));
+      setPlaying(true);
+    });
+  });
+  loadTrack(0);
+
+  /* ---------- booking form (demo intercept) ---------- */
+  var bookform = document.getElementById("bookform");
+  var bookbtn = document.getElementById("bookbtn");
+  bookform.addEventListener("submit", function(e){
+    e.preventDefault();
+    bookbtn.textContent = "Request logged ✓";
+    bookbtn.classList.add("done");
+    bookbtn.disabled = true;
+    document.getElementById("formnote").textContent = "Logged locally — demo only. No data left this page.";
+    blip(2400);
+  });
+
+  /* ---------- management dummy ---------- */
+  document.getElementById("mgmtbtn").addEventListener("click", function(){
+    document.getElementById("mgmtnote").classList.add("show");
+  });
+
+  /* ---------- section reveals + HUD cue ---------- */
+  var revealEls = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
+  if ("IntersectionObserver" in window && !RM) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+      });
+    }, { rootMargin: "0px 0px -12% 0px", threshold: 0.05 });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add("in"); });
+  }
+  var secEls = Array.prototype.slice.call(document.querySelectorAll("section[data-cue]"));
+  if ("IntersectionObserver" in window) {
+    var sio = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting) hudsec.textContent = en.target.getAttribute("data-cue");
+      });
+    }, { rootMargin: "-42% 0px -42% 0px" });
+    secEls.forEach(function(el){ sio.observe(el); });
+  }
+
+  /* ---------- custom cursor (fine pointers) ---------- */
+  var ring = document.getElementById("curring");
+  var dot = document.getElementById("curdot");
+  var mx = -100, my = -100, rx = -100, ry = -100;
+  var finePointer = window.matchMedia("(pointer: fine)").matches && !RM;
+  if (finePointer) {
+    document.addEventListener("mousemove", function(e){
+      mx = e.clientX; my = e.clientY;
+      dot.style.transform = "translate(" + mx + "px," + my + "px) translate(-50%,-50%)";
+    });
+    document.addEventListener("mouseover", function(e){
+      var hov = e.target.closest ? e.target.closest("a,button,select,input,label") : null;
+      ring.classList.toggle("hov", !!hov);
+    });
+  }
+
+  /* ---------- the ONE rAF loop ---------- */
+  var lastT = performance.now();
+  function frame(now){
+    var dt = Math.min(64, now - lastT);
+    lastT = now;
+
+    // 174 BPM pulse envelope
+    var ph = (now % BEAT) / BEAT;
+    var pulse = Math.pow(1 - ph, 2.4);
+    root.style.setProperty("--pulse", pulse.toFixed(3));
+
+    // lerped scroll + velocity
+    var raw = window.scrollY || 0;
+    smooth = lerp(smooth, raw, 0.11);
+    velT = raw - lastRaw;
+    lastRaw = raw;
+    vel = lerp(vel, velT, 0.08);
+    var velC = clamp(vel, -40, 40);
+    root.style.setProperty("--vel", velC.toFixed(2));
+
+    // site progress
+    var max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    var prog = clamp(smooth / max, 0, 1);
+    root.style.setProperty("--prog", prog.toFixed(4));
+
+    // platter physics: scroll scrub + playback inertia (+ a velocity kick)
+    var targetAv = playing ? 200 : 0;         // ~33 1/3 rpm when playing
+    av = lerp(av, targetAv, 0.035);           // weighty spin-up / spin-down
+    playAngle += av * dt / 1000;
+    var angle = smooth * 0.28 + playAngle + velC * 0.6;
+    if (!RM && jog) jog.style.transform = "rotate(" + angle.toFixed(2) + "deg)";
+
+    // playback clock
+    if (playing) {
+      elapsed += dt / 1000;
+      var d = tracks[curTrack].dur;
+      if (elapsed >= d) { loadTrack(curTrack + 1); }
+      else {
+        tcur.textContent = fmt(elapsed);
+        root.style.setProperty("--tprog", (elapsed / d).toFixed(4));
+      }
+    }
+
+    // HUD readouts
+    var shown = Math.round(((angle % 360) + 360) % 360);
+    hudrot.textContent = "+" + ("000" + shown).slice(-4) + "°";
+    hudvel.textContent = Math.abs(velC).toFixed(2);
+
+    // cursor ring trails with lerp
+    if (finePointer) {
+      rx = lerp(rx, mx, 0.22);
+      ry = lerp(ry, my, 0.22);
+      ring.style.transform = "translate(" + rx.toFixed(1) + "px," + ry.toFixed(1) + "px) translate(-50%,-50%)";
+    }
+
+    requestAnimationFrame(frame);
+  }
+  if (!RM) {
+    requestAnimationFrame(frame);
+  } else {
+    // static fallback: correct readouts, no motion
+    root.style.setProperty("--pulse", "0");
+    root.style.setProperty("--prog", "0");
+  }
+})();
+</script>
+</body>
+</html>
