@@ -255,9 +255,24 @@ section{padding:19vh 0 15vh}
   position:absolute;left:-3vw;bottom:-6vh;z-index:0;pointer-events:none;user-select:none;
   font-weight:800;letter-spacing:-.04em;line-height:.78;
   font-size:clamp(220px,30vw,470px);
-  color:transparent;-webkit-text-stroke:1px rgba(var(--la),.13);
-  opacity:calc(.45 + var(--pulse)*.25);
+  color:transparent;
+  background:url("assets/peak-live-01.webp") 50% 26%/cover no-repeat;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-stroke:1px rgba(var(--la),.12);
+  filter:brightness(.8) saturate(1.05);
+  opacity:calc(.5 + var(--pulse)*.2);
 }
+#hero .col{position:relative;z-index:1}
+.hero-press{margin-top:32px;display:flex;flex-direction:column;gap:9px}
+.pressq{
+  font-family:Georgia,"Times New Roman",serif;font-style:italic;
+  font-size:clamp(16px,1.9vw,21px);color:var(--ink);opacity:.92;
+}
+.pressq span{
+  font-family:inherit;font-style:normal;font-family:ui-monospace,"SF Mono",Menlo,monospace;
+  font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-left:14px;
+}
+.venues{color:var(--dim)}
 .hero-sub{margin-top:26px;font-size:clamp(16px,1.8vw,22px);color:var(--mut);max-width:34ch}
 .hero-ctas{display:flex;gap:14px;margin-top:36px;flex-wrap:wrap;position:relative;z-index:1}
 .hcta{
@@ -679,6 +694,10 @@ body.pre .orbit{opacity:.22}
       <div class="hero-ctas reveal in d3">
         <button class="hcta solid" id="heroplay" type="button"><b>&#9654;&#xFE0E;</b>&nbsp;Play her first mix</button>
         <a class="hcta line" href="#booking">Book the set</a>
+      </div>
+      <div class="hero-press reveal in d3">
+        <p class="pressq">&ldquo;The boss lady of DnBabes&rdquo;<span>&mdash; Drum &amp; Bass Proper</span></p>
+        <p class="lbl venues">Liquicity Barcelona &#183; The Void Utrecht &#183; Sala Apolo</p>
       </div>
       <div class="scrollcue reveal in d3">
         <span class="wheelico"></span>
