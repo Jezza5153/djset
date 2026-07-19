@@ -266,13 +266,34 @@ section{padding:19vh 0 15vh}
 .pull .beat{color:var(--mag)}
 .story-p{margin-top:34px;color:var(--mut);font-size:clamp(15px,1.6vw,18px);line-height:1.65;max-width:52ch}
 @keyframes floaty{50%{transform:translateY(-7px)}}
-.press{margin-top:46px;width:min(480px,100%)}
-.press img{
-  width:100%;aspect-ratio:3/4;object-fit:cover;
+.press{margin-top:46px;width:min(480px,100%);position:relative;overflow:hidden;
   border:1px solid rgba(242,244,247,.13);
-  filter:saturate(.98) contrast(1.05);
   box-shadow:0 26px 80px rgba(0,0,0,.5),0 0 110px rgba(var(--la),.22);
-  animation:floaty 9s ease-in-out infinite;
+}
+.press img{
+  display:block;width:100%;aspect-ratio:3/4;object-fit:cover;
+  filter:saturate(.98) contrast(1.05);
+  transform-origin:62% 38%;
+  animation:kenburns 26s ease-in-out infinite alternate;
+  will-change:transform;
+}
+@keyframes kenburns{0%{transform:scale(1)}100%{transform:scale(1.075) translate(-1.4%,1.8%)}}
+.press::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent 42%,rgba(242,244,247,.075) 50%,transparent 58%);
+  transform:translateX(-130%);
+  animation:sheen 9.5s cubic-bezier(.4,0,.2,1) infinite;
+}
+@keyframes sheen{0%,58%{transform:translateX(-130%)}82%,100%{transform:translateX(130%)}}
+.press .cap{position:relative;z-index:1;background:#0a0b13;margin-top:0;padding:12px 10px}
+/* daylight still — the one bright beat in a dark site */
+.dayframe{margin-top:30px;width:min(400px,92%)}
+.dayframe img{
+  width:100%;aspect-ratio:16/10;object-fit:cover;
+  border:1px solid rgba(242,244,247,.13);
+  filter:saturate(1.02);
+  box-shadow:0 22px 60px rgba(0,0,0,.45);
+  animation:floaty 9s ease-in-out infinite;animation-delay:-3s;
   will-change:transform;
 }
 .about-grid{margin-top:44px;display:flex;gap:30px;align-items:center;border-top:1px solid var(--line);padding-top:32px}
@@ -485,6 +506,24 @@ footer{
 .npbtn:hover{color:var(--ink);border-color:rgba(var(--la),.5)}
 .npbtn[hidden]{display:none}
 
+/* ---------- gig ticker ---------- */
+.ticker{
+  position:relative;z-index:2;overflow:hidden;
+  border-top:1px solid rgba(242,244,247,.08);
+  border-bottom:1px solid rgba(242,244,247,.08);
+  padding:15px 0;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+}
+.tk{display:flex;width:max-content;white-space:nowrap;animation:tkmove 42s linear infinite;will-change:transform}
+.tk span{
+  font-family:ui-monospace,"SF Mono",Menlo,monospace;
+  font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--dim);
+}
+.tk b{color:rgb(var(--la));font-weight:600}
+@keyframes tkmove{to{transform:translateX(-50%)}}
+
 /* ---------- entrance: the drop-in ---------- */
 #flashfx{
   position:fixed;inset:0;z-index:120;pointer-events:none;opacity:0;
@@ -634,6 +673,10 @@ body.pre .orbit{opacity:.22}
         <img class="portrait" src="assets/peak-portrait.jpg" alt="PEAK portrait">
         <p><span class="lbl" style="display:block;margin-bottom:8px">PEAK &#183; co-founder, DnBabes</span>Drum &amp; Babes Barcelona &mdash; fierce, free and for everyone. Selector, promoter, community-builder; booked for high-energy rooms that want the tempo kept honest.</p>
       </div>
+      <figure class="dayframe reveal d3">
+        <img src="assets/peak-bcn-day.webp" alt="PEAK above Barcelona, the city and sea behind her" loading="lazy">
+        <figcaption class="cap lbl"><span>Daylight &#8212; above the city</span><span>Showcase interview</span></figcaption>
+      </figure>
     </div>
   </section>
 
@@ -689,6 +732,13 @@ body.pre .orbit{opacity:.22}
       <p class="tline-note lbl reveal">Shared bills &#8212; Serum &#183; Nymfo &#183; Bala &#183; Lilakk</p>
     </div>
   </section>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="tk">
+      <span>Liquicity Barcelona &#183; Razzmatazz &mdash; The Void &#183; Utrecht &mdash; Sala Apolo &#183; La Cinc &mdash; Automata DNB &#183; Barcelona &mdash; <b>DnBabes</b> &#183; fierce, free and for everyone &mdash;&nbsp;</span>
+      <span>Liquicity Barcelona &#183; Razzmatazz &mdash; The Void &#183; Utrecht &mdash; Sala Apolo &#183; La Cinc &mdash; Automata DNB &#183; Barcelona &mdash; <b>DnBabes</b> &#183; fierce, free and for everyone &mdash;&nbsp;</span>
+    </div>
+  </div>
 
   <!-- GALLERY -->
   <section id="gallery" data-cue="GALLERY">
